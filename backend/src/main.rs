@@ -16,9 +16,9 @@ impl Api {
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     tracing_subscriber::fmt::init();
-    info!("Rapidoc (OpenAPI site) running at {}", "http://localhost:3000/docs");
+    info!("Rapidoc (OpenAPI site) running at {}", "http://127.0.0.1:3000/docs");
     let api_service =
-        OpenApiService::new(Api, "Hello World", "1.0").server("http://localhost:3000");
+        OpenApiService::new(Api, "Hello World", "1.0").server("http://127.0.0.1:3000");
     let ui = api_service.rapidoc();
     let app = Route::new().nest("/", api_service).nest("/docs", ui);
     Server::new(TcpListener::bind("127.0.0.1:3000"))
