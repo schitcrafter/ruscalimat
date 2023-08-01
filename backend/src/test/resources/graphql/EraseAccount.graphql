@@ -1,3 +1,0 @@
-mutation {
-  eraseAccount(id: DB_ID)
-}

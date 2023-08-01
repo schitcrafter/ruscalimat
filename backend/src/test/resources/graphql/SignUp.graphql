@@ -1,9 +1,0 @@
-mutation {
-  signUp(pin: "0000") {
-    email
-    extId
-    name
-    balance
-    id
-  }
-}

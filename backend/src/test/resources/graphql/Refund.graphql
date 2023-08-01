@@ -1,3 +1,0 @@
-mutation {
-  refundPurchase(id: DB_ID) 
-}

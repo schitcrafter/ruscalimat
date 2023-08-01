@@ -1,8 +1,0 @@
-query {
-  account(id: DB_ID) {
-    name
-    balance
-    email
-    extId
-  }
-}
