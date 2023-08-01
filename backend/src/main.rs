@@ -8,7 +8,7 @@ struct Api;
 impl Api {
     #[oai(path = "/", method = "get")]
     async fn index(&self) -> PlainText<&'static str> {
-        PlainText("Hello World")
+        PlainText("Hello World, #2")
     }
 }
 
