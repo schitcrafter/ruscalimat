@@ -11,10 +11,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
     defaults:
       run:
         working-directory: backend
     steps:
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
