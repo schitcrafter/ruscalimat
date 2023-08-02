@@ -1,11 +1,15 @@
-use poem::{Route, listener::TcpListener, Server};
+use async_graphql::{http::GraphiQLSource, Schema, EmptyMutation, EmptySubscription};
+use async_graphql_poem::GraphQL;
+use color_eyre::eyre::Result;
+use poem::{handler, listener::TcpListener, web::Html, IntoResponse, Route, Server, get};
 use poem_openapi::OpenApiService;
 use tracing::info;
-use color_eyre::eyre::Result;
 
-use crate::pictureapi::{PictureApi, accountapi::AccountApi, productapi::ProductApi};
+use crate::{rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi}, graphql::GraphqlRoot};
 
-mod pictureapi;
+mod db;
+mod graphql;
+mod rest;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -19,26 +23,36 @@ async fn main() -> Result<()> {
 
     info!("OpenAPI explorer running at http://{hosted_url}/ruscalimat/q/docs");
 
-    let all_endpoints = (PictureApi, AccountApi, ProductApi);
+    let all_endpoints = (PictureApi, AccountPicApi, ProductPicApi);
 
-    let api_service =
-        OpenApiService::new(all_endpoints, "Ruscalimat API", "1.0")
+    let api_service = OpenApiService::new(all_endpoints, "Ruscalimat API", "1.0")
         .server(format!("{hosted_http}/ruscalimat/api/v1"));
 
     let ui = api_service.openapi_explorer();
     let spec = api_service.spec_endpoint();
     let spec_yaml = api_service.spec_endpoint_yaml();
 
-    let app = Route::new().nest("/ruscalimat",
+    let schema = Schema::build(GraphqlRoot::default(), EmptyMutation, EmptySubscription)
+        // .data(db_handle)
+        .finish();
+
+    let graphql_app = Route::new().at("/", get(graphiql).post(GraphQL::new(schema)));
+
+    let app = Route::new().nest(
+        "/ruscalimat",
         Route::new()
             .nest("/api/v1", api_service)
             .nest("/q/docs", ui)
             .nest("/q/openapi", spec)
             .nest("/q/openapi.yaml", spec_yaml)
+            .nest("/graphql", graphql_app),
     );
-    Server::new(TcpListener::bind(hosted_url))
-        .run(app)
-        .await?;
+    Server::new(TcpListener::bind(hosted_url)).run(app).await?;
 
     Ok(())
+}
+
+#[handler]
+async fn graphiql() -> impl IntoResponse {
+    Html(GraphiQLSource::build().endpoint("/").finish())
 }

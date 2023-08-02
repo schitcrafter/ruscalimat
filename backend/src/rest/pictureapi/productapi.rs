@@ -1,9 +1,10 @@
 use poem_openapi::{OpenApi, param::Path};
 
-pub struct ProductApi;
+
+pub struct ProductPicApi;
 
 #[OpenApi(prefix_path = "/product")]
-impl ProductApi {
+impl ProductPicApi {
 
     #[oai(path = "/:id", method = "post")]
     pub async fn update_product_picture(&self, Path(_id): Path<String>) {

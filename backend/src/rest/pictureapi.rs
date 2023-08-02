@@ -1,7 +1,10 @@
 use poem_openapi::{OpenApi, payload::PlainText};
 
-pub mod accountapi;
-pub mod productapi;
+mod accountapi;
+mod productapi;
+
+pub use accountapi::AccountPicApi;
+pub use productapi::ProductPicApi;
 
 pub struct PictureApi;
 
