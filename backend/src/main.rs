@@ -3,6 +3,7 @@ use async_graphql_poem::GraphQL;
 use color_eyre::eyre::Result;
 use poem::{handler, listener::TcpListener, web::Html, IntoResponse, Route, Server, get};
 use poem_openapi::OpenApiService;
+use testcontainers::{images::postgres::Postgres, clients};
 use tracing::info;
 
 use crate::{rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi}, graphql::GraphqlRoot};
@@ -14,8 +15,13 @@ mod rest;
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
-    dotenv::dotenv()?;
+    dotenvy::dotenv()?;
     tracing_subscriber::fmt::init();
+
+    let docker = clients::Cli::default();
+    let postgres = docker.run(Postgres::default());
+    info!("Postgres port: {:?}", postgres.ports());
+
 
     let port = std::env::var("APPLICATION_PORT").unwrap_or("3000".to_owned());
     let hosted_url = format!("localhost:{port}");

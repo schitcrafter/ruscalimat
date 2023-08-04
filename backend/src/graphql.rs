@@ -1,6 +1,10 @@
 use async_graphql::Object;
 
-pub mod account;
+mod model;
+mod account;
+mod product;
+mod purchase;
+mod statistics;
 
 #[derive(Default)]
 pub struct GraphqlRoot;

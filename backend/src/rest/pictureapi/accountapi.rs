@@ -6,7 +6,7 @@ pub struct AccountPicApi;
 
 #[OpenApi(prefix_path = "/picture")]
 impl AccountPicApi {
-    #[oai(path = "/account/:id", method = "post")]
+    #[oai(path = "/account/{:id}", method = "post")]
     pub async fn update_other_account_picture(&self, Path(id): Path<String>) {
         info!("Got id {id}");
     }
