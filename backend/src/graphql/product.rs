@@ -2,7 +2,7 @@ use async_graphql::Object;
 
 use crate::db::{Product, ProductType, ProductWithFavorite};
 
-
+#[derive(Default)]
 pub struct ProductQuery;
 
 #[Object]
@@ -24,6 +24,7 @@ impl ProductQuery {
     }
 }
 
+#[derive(Default)]
 pub struct ProductMutation;
 
 #[Object]

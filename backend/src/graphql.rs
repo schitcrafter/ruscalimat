@@ -1,17 +1,31 @@
-use async_graphql::Object;
+use async_graphql::{http::GraphiQLSource, MergedObject};
+use poem::{handler, web::Html, IntoResponse};
 
-mod model;
 mod account;
 mod product;
 mod purchase;
 mod statistics;
 
-#[derive(Default)]
-pub struct GraphqlRoot;
+#[derive(MergedObject, Default)]
+pub struct QueryRoot(
+    account::AccountQuery,
+    product::ProductQuery,
+    purchase::PurchaseQuery,
+    statistics::StatisticsQuery,
+);
 
-#[Object]
-impl GraphqlRoot {
-    async fn test(&self) -> String {
-        todo!()
-    }
+#[derive(MergedObject, Default)]
+pub struct MutationRoot(
+    account::AccountMutation,
+    product::ProductMutation,
+    purchase::PurchaseMutation,
+);
+
+#[handler]
+pub async fn graphiql_handler() -> impl IntoResponse {
+    Html(
+        GraphiQLSource::build()
+            .endpoint("/ruscalimat/graphql")
+            .finish(),
+    )
 }

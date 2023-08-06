@@ -1,0 +1,8 @@
+
+CREATE TABLE IF NOT EXISTS accounts (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    pin_hash VARCHAR(255) NOT NULL,
+    deleted_at TIMESTAMP
+)

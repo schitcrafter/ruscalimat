@@ -2,7 +2,7 @@ use async_graphql::Object;
 
 use crate::db::PurchaseCount;
 
-
+#[derive(Default)]
 pub struct StatisticsQuery;
 
 #[Object]

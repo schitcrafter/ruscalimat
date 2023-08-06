@@ -2,6 +2,7 @@ use async_graphql::Object;
 
 use crate::db::Purchase;
 
+#[derive(Default)]
 pub struct PurchaseQuery;
 
 #[Object]
@@ -19,6 +20,7 @@ impl PurchaseQuery {
     }
 }
 
+#[derive(Default)]
 pub struct PurchaseMutation;
 
 #[Object]
