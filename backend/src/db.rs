@@ -1,8 +1,6 @@
-use async_graphql::{
-    ContainerType, Enum, InputObject, InputObjectType, InputType, ObjectType, OutputType,
-    SimpleObject,
-};
+use async_graphql::{InputObject, SimpleObject};
 use chrono::NaiveDateTime;
+use sqlx::FromRow;
 
 /// Currently a BIGINT
 pub type PrimaryKey = i64;
@@ -18,11 +16,13 @@ pub struct Account {
     pub pin_hash: String,
 }
 
-#[derive(SimpleObject, InputObject)]
+#[derive(SimpleObject, InputObject, FromRow)]
 #[graphql(input_name = "ProductInput")]
 pub struct Product {
     pub id: PrimaryKey,
     pub name: String,
+    #[sqlx(rename = "type")]
+    pub product_type: ProductType,
 }
 
 #[derive(SimpleObject)]
@@ -32,7 +32,7 @@ pub struct ProductWithFavorite {
     pub is_favorite: bool,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(async_graphql::Enum, Copy, Clone, Eq, PartialEq)]
 pub enum ProductType {
     HotDrink,
     ColdDrink,
@@ -44,6 +44,7 @@ pub struct Purchase {
     pub id: PrimaryKey,
     pub account: Account,
     pub product: Product,
+    pub quantity: u32,
 }
 
 #[derive(SimpleObject)]

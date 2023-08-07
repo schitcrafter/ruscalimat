@@ -13,7 +13,7 @@ pub struct PictureApi;
 #[OpenApi]
 impl PictureApi {
     #[oai(path = "/picture", method = "get")]
-    async fn index(&self, Data(db): Data<&Pool<Postgres>>) -> PlainText<&'static str> {
+    async fn index(&self, Data(_db): Data<&Pool<Postgres>>) -> PlainText<&'static str> {
         PlainText("Hello World, #2")
     }
 }

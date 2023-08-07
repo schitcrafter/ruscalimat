@@ -25,7 +25,7 @@ pub struct PurchaseMutation;
 
 #[Object]
 impl PurchaseMutation {
-    async fn make_purchase(&self, _product_id: u64, amount: u32) -> Purchase {
+    async fn make_purchase(&self, _product_id: u64, _amount: u32) -> Purchase {
         todo!()
     }
 

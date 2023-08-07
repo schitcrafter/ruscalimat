@@ -1,8 +1,23 @@
 
 CREATE TABLE IF NOT EXISTS accounts (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    id BIGINT UNIQUE GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     pin_hash VARCHAR(255) NOT NULL,
     deleted_at TIMESTAMP
-)
+);
+
+CREATE TYPE product_type AS ENUM ('HotDrink', 'ColdDrink');
+
+CREATE TABLE IF NOT EXISTS products (
+    id BIGINT UNIQUE GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(255) NOT NULL,
+    type product_type NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS purchases (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    account BIGINT NOT NULL REFERENCES accounts(id),
+    product BIGINT NOT NULL REFERENCES products(id),
+    quantity INT NOT NULL
+);

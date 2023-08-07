@@ -1,6 +1,4 @@
 use async_graphql::{Context, ErrorExtensions, Object};
-use color_eyre::eyre;
-use sqlx::{Pool, Postgres};
 
 use crate::db::{Account, PrimaryKey};
 
@@ -68,12 +66,13 @@ impl AccountMutation {
 
     async fn signup(&self, ctx: &Context<'_>, pin: u16) -> async_graphql::Result<Account> {
         if pin > 9999 {
-            return Err(color_eyre::eyre::eyre!(
-                "Pin needs to be between 0 and 9999"
-            ));
+            return Err(
+                color_eyre::eyre::eyre!("Pin needs to be between 0 and 9999")
+                    .extend_with(|_, e| e.set("code", 400)),
+            );
         }
         let db = ctx.data_unchecked();
-        let pin_hash = hash_pin(pin);
+        let pin_hash = hash_pin(pin)?;
         let account = sqlx::query_as!(
             Account,
             "INSERT INTO accounts (name, email, pin_hash) VALUES ($1, $2, $3) RETURNING *",
