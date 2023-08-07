@@ -1,5 +1,5 @@
-use async_graphql::{Context, Object};
-use color_eyre::eyre::{self, Result};
+use async_graphql::{Context, ErrorExtensions, Object};
+use color_eyre::eyre;
 use sqlx::{Pool, Postgres};
 
 use crate::db::{Account, PrimaryKey};
@@ -9,7 +9,7 @@ pub struct AccountQuery;
 
 #[Object]
 impl AccountQuery {
-    async fn accounts(&self, ctx: &Context<'_>) -> Result<Vec<Account>> {
+    async fn accounts(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Account>> {
         let db = ctx.data_unchecked();
         let accounts = sqlx::query_as!(Account, "SELECT * FROM accounts")
             .fetch_all(db)
@@ -17,7 +17,11 @@ impl AccountQuery {
         Ok(accounts)
     }
 
-    async fn account(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<Option<Account>> {
+    async fn account(
+        &self,
+        ctx: &Context<'_>,
+        id: PrimaryKey,
+    ) -> async_graphql::Result<Option<Account>> {
         let db = ctx.data_unchecked();
         let account = sqlx::query_as!(Account, "SELECT * FROM accounts WHERE id = $1", id)
             .fetch_optional(db)
@@ -33,7 +37,7 @@ impl AccountQuery {
         todo!()
     }
 
-    async fn deleted_accounts(&self, ctx: &Context<'_>) -> Result<Vec<Account>> {
+    async fn deleted_accounts(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Account>> {
         let db = ctx.data_unchecked();
         let accounts = sqlx::query_as!(
             Account,
@@ -50,7 +54,11 @@ pub struct AccountMutation;
 
 #[Object]
 impl AccountMutation {
-    async fn delete_account(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<bool> {
+    async fn delete_account(
+        &self,
+        ctx: &Context<'_>,
+        id: PrimaryKey,
+    ) -> async_graphql::Result<bool> {
         let db = ctx.data_unchecked();
         sqlx::query!("UPDATE accounts SET deleted_at = now() WHERE id = $1", id)
             .execute(db)
@@ -58,7 +66,7 @@ impl AccountMutation {
         Ok(true)
     }
 
-    async fn signup(&self, ctx: &Context<'_>, pin: u16) -> Result<Account> {
+    async fn signup(&self, ctx: &Context<'_>, pin: u16) -> async_graphql::Result<Account> {
         if pin > 9999 {
             return Err(color_eyre::eyre::eyre!(
                 "Pin needs to be between 0 and 9999"
@@ -79,7 +87,11 @@ impl AccountMutation {
         Ok(account)
     }
 
-    async fn update_account(&self, ctx: &Context<'_>, account: Account) -> Result<bool> {
+    async fn update_account(
+        &self,
+        ctx: &Context<'_>,
+        account: Account,
+    ) -> async_graphql::Result<bool> {
         let db = ctx.data_unchecked();
         sqlx::query!(
             "UPDATE accounts SET name = $1, email = $2 WHERE id = $3",
@@ -97,6 +109,7 @@ impl AccountMutation {
     }
 }
 
-fn hash_pin(pin: u16) -> String {
-    bcrypt::hash(pin.to_string(), bcrypt::DEFAULT_COST).unwrap()
+fn hash_pin(pin: u16) -> async_graphql::Result<String> {
+    bcrypt::hash(pin.to_string(), bcrypt::DEFAULT_COST)
+        .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
 }
