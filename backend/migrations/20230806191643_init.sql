@@ -7,17 +7,19 @@ CREATE TABLE IF NOT EXISTS accounts (
     deleted_at TIMESTAMP
 );
 
-CREATE TYPE product_type AS ENUM ('HotDrink', 'ColdDrink');
-
+-- product_type here is:
+-- 0 for hot drink
+-- 1 for cold drink
 CREATE TABLE IF NOT EXISTS products (
     id BIGINT UNIQUE GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
-    type product_type NOT NULL
+    product_type SMALLINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS purchases (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
-    account BIGINT NOT NULL REFERENCES accounts(id),
-    product BIGINT NOT NULL REFERENCES products(id),
-    quantity INT NOT NULL
+    id BIGINT UNIQUE GENERATED ALWAYS AS IDENTITY,
+    account_id BIGINT NOT NULL REFERENCES accounts(id),
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    quantity INT NOT NULL,
+    refunded BOOLEAN NOT NULL
 );

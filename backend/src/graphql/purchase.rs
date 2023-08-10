@@ -1,22 +1,30 @@
-use async_graphql::Object;
+use async_graphql::{Context, ErrorExtensions, Object, Result};
 
-use crate::db::Purchase;
+use crate::db::{PrimaryKey, Purchase};
 
 #[derive(Default)]
 pub struct PurchaseQuery;
 
 #[Object]
 impl PurchaseQuery {
-    async fn purchases(&self) -> Vec<Purchase> {
-        todo!()
+    async fn purchases(&self, ctx: &Context<'_>) -> Result<Vec<Purchase>> {
+        let db = ctx.data()?;
+        sqlx::query_as!(Purchase, "SELECT * FROM purchases")
+            .fetch_all(db)
+            .await
+            .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
     }
 
     async fn my_purchases(&self) -> Vec<Purchase> {
         todo!()
     }
 
-    async fn purchase(&self, _id: u64) -> Purchase {
-        todo!()
+    async fn purchase(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<Purchase> {
+        let db = ctx.data()?;
+        sqlx::query_as!(Purchase, "SELECT * FROM purchases WHERE id = $1", id)
+            .fetch_one(db)
+            .await
+            .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
     }
 }
 
@@ -25,11 +33,16 @@ pub struct PurchaseMutation;
 
 #[Object]
 impl PurchaseMutation {
-    async fn make_purchase(&self, _product_id: u64, _amount: u32) -> Purchase {
+    async fn make_purchase(&self, _product_id: PrimaryKey, _amount: i32) -> Result<Purchase> {
         todo!()
     }
 
-    async fn refund_purchase(&self, _id: u64) -> bool {
-        todo!()
+    async fn refund_purchase(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<bool> {
+        let db = ctx.data()?;
+        sqlx::query!("UPDATE purchases SET refunded = true WHERE id = $1", id)
+            .execute(db)
+            .await
+            .map(|result| result.rows_affected() == 1)
+            .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
     }
 }

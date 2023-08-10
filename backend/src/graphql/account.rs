@@ -57,7 +57,7 @@ impl AccountMutation {
         ctx: &Context<'_>,
         id: PrimaryKey,
     ) -> async_graphql::Result<bool> {
-        let db = ctx.data_unchecked();
+        let db = ctx.data()?;
         sqlx::query!("UPDATE accounts SET deleted_at = now() WHERE id = $1", id)
             .execute(db)
             .await?;
@@ -71,7 +71,7 @@ impl AccountMutation {
                     .extend_with(|_, e| e.set("code", 400)),
             );
         }
-        let db = ctx.data_unchecked();
+        let db = ctx.data()?;
         let pin_hash = hash_pin(pin)?;
         let account = sqlx::query_as!(
             Account,
@@ -91,7 +91,7 @@ impl AccountMutation {
         ctx: &Context<'_>,
         account: Account,
     ) -> async_graphql::Result<bool> {
-        let db = ctx.data_unchecked();
+        let db = ctx.data()?;
         sqlx::query!(
             "UPDATE accounts SET name = $1, email = $2 WHERE id = $3",
             account.name,

@@ -4,6 +4,9 @@
 
 Now with rust
 
+## More docs available in [backend/README.md](./backend/README.md)
+
+
 ## Dev
 
 There's a docker compose in the project directory for the postgres that is required for compiling & running.
