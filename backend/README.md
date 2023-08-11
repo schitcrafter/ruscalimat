@@ -21,4 +21,3 @@ sqlx db setup
 sqlx db reset
 ```
 If you're changing migrations, you need to run `cargo build` afterwards in order for environments without a running database (i.e. GitHub Actions, other CI/CD) to function. This will change `sqlx-data.json` and/or anything inside `.sqlx`.
-
