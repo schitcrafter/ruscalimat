@@ -13,6 +13,7 @@ use crate::{
     rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi},
 };
 
+mod auth;
 mod db;
 mod graphql;
 mod rest;
@@ -22,6 +23,8 @@ async fn main() -> Result<()> {
     color_eyre::install()?;
     dotenvy::dotenv()?;
     tracing_subscriber::fmt::init();
+
+    auth::setup(&env::var("AUTH_SERVER_URL").unwrap()).await?;
 
     let port = env::var("APPLICATION_PORT").unwrap_or("3000".to_owned());
     let hosted_url = format!("localhost:{port}");
@@ -33,7 +36,7 @@ async fn main() -> Result<()> {
     let all_endpoints = (PictureApi, AccountPicApi, ProductPicApi);
 
     let api_service = OpenApiService::new(all_endpoints, "Ruscalimat API", "1.0")
-        .server(format!("{hosted_http}/v1"));
+        .server(format!("{hosted_http}/v1/rest"));
 
     let ui = api_service.openapi_explorer();
     let openapi_spec = api_service.spec_endpoint();
@@ -46,28 +49,23 @@ async fn main() -> Result<()> {
         .await?;
     sqlx::migrate!().run(&db_pool).await?;
 
-    let graphql_schema = Schema::build(
-        QueryRoot::default(),
-        MutationRoot::default(),
-        EmptySubscription,
-    )
-    .data(db_pool.clone())
-    .finish();
+    let dev_paths = Route::new()
+        .nest("/graphiql", get(graphql::graphiql_handler))
+        .nest("/docs", ui)
+        .nest("/openapi", openapi_spec)
+        .nest("/openapi.yaml", openapi_spec_yaml);
 
-    let app = Route::new().nest(
-        "/ruscalimat",
-        Route::new()
-            .nest("/v1", api_service.data(db_pool))
-            .at("/graphql", post(GraphQL::new(graphql_schema)))
-            .nest(
-                "/q",
-                Route::new()
-                    .nest("/graphiql", get(graphql::graphiql_handler))
-                    .nest("/docs", ui)
-                    .nest("/openapi", openapi_spec)
-                    .nest("/openapi.yaml", openapi_spec_yaml),
-            ),
-    );
+    let api_routes = Route::new()
+        .nest("/rest", api_service)
+        .at("/graphql", post(graphql::graphql_handler))
+        .around(auth::auth_middleware);
+
+    let app = Route::new()
+        .nest(
+            "/ruscalimat",
+            Route::new().nest("/v1", api_routes).nest("/q", dev_paths),
+        )
+        .data(db_pool);
 
     Server::new(TcpListener::bind(hosted_url)).run(app).await?;
 

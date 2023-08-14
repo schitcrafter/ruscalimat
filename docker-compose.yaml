@@ -8,3 +8,13 @@ services:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: postgres
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    ports:
+      - 8180:8080
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/ruscalimat-export.json
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command: start-dev --import-realm
