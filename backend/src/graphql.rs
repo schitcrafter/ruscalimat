@@ -3,9 +3,11 @@ use async_graphql_poem::{GraphQLBatchRequest, GraphQLBatchResponse};
 use poem::{
     handler,
     web::{Data, Html},
-    FromRequest, IntoResponse, Request, Result,
+    IntoResponse, Result,
 };
 use sqlx::{Pool, Postgres};
+
+use crate::auth::UserClaims;
 
 mod account;
 mod product;
@@ -29,8 +31,9 @@ pub struct MutationRoot(
 
 #[handler]
 pub async fn graphql_handler(
-    GraphQLBatchRequest(req): GraphQLBatchRequest,
+    GraphQLBatchRequest(mut req): GraphQLBatchRequest,
     Data(db_pool): Data<&Pool<Postgres>>,
+    user_claims: Option<Data<&UserClaims>>,
 ) -> Result<GraphQLBatchResponse> {
     let executor = Schema::build(
         QueryRoot::default(),
@@ -40,9 +43,9 @@ pub async fn graphql_handler(
     .data(db_pool.clone())
     .finish();
 
-    let user = todo!("extract user from request");
-
-    let req = req.data(user);
+    if let Some(user_claims_data) = user_claims {
+        req = req.data(user_claims_data.0.clone());
+    }
 
     Ok(GraphQLBatchResponse(executor.execute_batch(req).await))
 }

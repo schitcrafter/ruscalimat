@@ -4,9 +4,10 @@ use jsonwebtoken::{jwk::JwkSet, DecodingKey, TokenData, Validation};
 use poem::{
     error::{BadRequest, InternalServerError, Unauthorized},
     http::StatusCode,
-    Endpoint, Middleware, Request, Result,
+    Endpoint, Request, Result,
 };
 use serde::Deserialize;
+use tracing::debug;
 
 pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     let openid_configuration: serde_json::Value = reqwest::get(format!(
@@ -16,11 +17,18 @@ pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     .json()
     .await?;
 
+    debug!(
+        "Got response from openid_configuration endpoint: {}",
+        openid_configuration
+    );
+
     let jwks_url = openid_configuration.get("jwks_uri").unwrap();
     let jwks_url = jwks_url.as_str().unwrap();
+    debug!("jwks_url: {jwks_url}");
 
     let jwkset = get_jwk_set(jwks_url).await?;
     JWK_SET.set(jwkset).unwrap();
+    debug!("Got jwk set");
     Ok(())
 }
 
@@ -34,8 +42,9 @@ pub async fn get_jwk_set(jwks_url: &str) -> color_eyre::Result<JwkSet> {
         .map_err(From::from)
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct UserClaims {
+    #[serde(default)]
     pub groups: Vec<String>,
 }
 
@@ -77,6 +86,7 @@ pub async fn auth_middleware<E: Endpoint>(next: E, mut req: Request) -> Result<E
         let verified_header: TokenData<UserClaims> =
             jsonwebtoken::decode(auth_token, &decoding_key, &validation).map_err(Unauthorized)?;
 
+        debug!("Adding claims to data: {:?}", verified_header.claims);
         req.extensions_mut().insert(verified_header.claims);
     }
     next.call(req).await

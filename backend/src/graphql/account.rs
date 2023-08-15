@@ -1,6 +1,10 @@
 use async_graphql::{Context, ErrorExtensions, Object};
+use tracing::info;
 
-use crate::db::{Account, PrimaryKey};
+use crate::{
+    auth::UserClaims,
+    db::{Account, PrimaryKey},
+};
 
 #[derive(Default)]
 pub struct AccountQuery;
@@ -27,8 +31,10 @@ impl AccountQuery {
         Ok(account)
     }
 
-    async fn my_account(&self) -> Account {
-        todo!()
+    // TODO: Return Account here
+    async fn my_account(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+        let user_claims: Option<&UserClaims> = ctx.data_opt();
+        Ok(format!("{user_claims:?}"))
     }
 
     async fn pin_login(&self, _pin: u16) -> String {
