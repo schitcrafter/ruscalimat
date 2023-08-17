@@ -1,5 +1,4 @@
 use async_graphql::{Context, ErrorExtensions, Object};
-use tracing::info;
 
 use crate::{
     auth::UserClaims,
@@ -81,9 +80,14 @@ impl AccountMutation {
         let pin_hash = hash_pin(pin)?;
         let account = sqlx::query_as!(
             Account,
-            "INSERT INTO accounts (name, email, pin_hash) VALUES ($1, $2, $3) RETURNING *",
-            "test_name",           // TODO:
-            "test_email@test.com", // TODO:
+            r#"
+                INSERT INTO accounts (name, external_id, email, pin_hash)
+                VALUES ($1, $2, $3, $4)
+                RETURNING *
+            "#,
+            "test_name",                       // TODO:
+            "some-external-id-from-sub-claim", // TODO:
+            "test_email@test.com",             // TODO:
             pin_hash
         )
         .fetch_one(db)

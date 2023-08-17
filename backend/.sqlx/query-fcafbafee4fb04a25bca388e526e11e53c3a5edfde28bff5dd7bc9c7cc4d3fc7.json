@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO accounts (name, email, pin_hash) VALUES ($1, $2, $3) RETURNING *",
+  "query": "INSERT INTO accounts (name, external_id, email, pin_hash) VALUES ($1, $2, $3, $4) RETURNING *",
   "describe": {
     "columns": [
       {
@@ -38,6 +38,7 @@
       "Left": [
         "Varchar",
         "Varchar",
+        "Varchar",
         "Varchar"
       ]
     },
@@ -50,5 +51,5 @@
       true
     ]
   },
-  "hash": "0a8071355541ebe42841a5f25f0b9579b59fbc68f140b7092db04aa8c1b5181c"
+  "hash": "fcafbafee4fb04a25bca388e526e11e53c3a5edfde28bff5dd7bc9c7cc4d3fc7"
 }

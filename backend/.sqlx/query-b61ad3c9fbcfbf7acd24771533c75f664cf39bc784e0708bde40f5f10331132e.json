@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO products ( name, product_type )\n        VALUES ( $1, $2 )\n        RETURNING id, name, product_type AS \"product_type!: ProductType\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "product_type!: ProductType",
+        "type_info": {
+          "Custom": {
+            "name": "product_type",
+            "kind": {
+              "Enum": [
+                "colddrink",
+                "hotdrink"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        {
+          "Custom": {
+            "name": "product_type",
+            "kind": {
+              "Enum": [
+                "colddrink",
+                "hotdrink"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b61ad3c9fbcfbf7acd24771533c75f664cf39bc784e0708bde40f5f10331132e"
+}

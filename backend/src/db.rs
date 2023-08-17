@@ -11,6 +11,7 @@ pub type PrimaryKey = i64;
 #[graphql(input_name = "AccountInput")]
 pub struct Account {
     pub id: PrimaryKey,
+    pub external_id: String,
     pub name: String,
     pub email: String,
     pub deleted_at: Option<NaiveDateTime>,
@@ -34,11 +35,11 @@ pub struct ProductWithFavorite {
     pub is_favorite: bool,
 }
 
-#[derive(async_graphql::Enum, Copy, Clone, Eq, PartialEq)]
-#[repr(i16)]
+#[derive(async_graphql::Enum, sqlx::Type, Copy, Clone, Eq, PartialEq)]
+#[sqlx(type_name = "product_type", rename_all = "lowercase")]
 pub enum ProductType {
-    HotDrink = 0,
-    ColdDrink = 1,
+    HotDrink,
+    ColdDrink,
 }
 
 impl From<i16> for ProductType {

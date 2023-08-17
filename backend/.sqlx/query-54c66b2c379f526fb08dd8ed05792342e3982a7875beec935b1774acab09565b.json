@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE products\n            SET name = $2, product_type = $3\n            WHERE id = $1\n            RETURNING id, name, product_type AS \"product_type!: ProductType\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "product_type!: ProductType",
+        "type_info": {
+          "Custom": {
+            "name": "product_type",
+            "kind": {
+              "Enum": [
+                "colddrink",
+                "hotdrink"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "product_type",
+            "kind": {
+              "Enum": [
+                "colddrink",
+                "hotdrink"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "54c66b2c379f526fb08dd8ed05792342e3982a7875beec935b1774acab09565b"
+}

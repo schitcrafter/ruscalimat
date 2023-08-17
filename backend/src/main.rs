@@ -1,17 +1,12 @@
 use std::env;
 
-use async_graphql::{EmptySubscription, Schema};
-use async_graphql_poem::GraphQL;
 use color_eyre::eyre::Result;
 use poem::{get, listener::TcpListener, post, EndpointExt, Route, Server};
 use poem_openapi::OpenApiService;
 use sqlx::postgres::PgPoolOptions;
 use tracing::info;
 
-use crate::{
-    graphql::{MutationRoot, QueryRoot},
-    rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi},
-};
+use crate::rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi};
 
 mod auth;
 mod db;

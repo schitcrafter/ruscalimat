@@ -10,21 +10,26 @@
       },
       {
         "ordinal": 1,
-        "name": "name",
+        "name": "external_id",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "email",
+        "name": "name",
         "type_info": "Varchar"
       },
       {
         "ordinal": 3,
-        "name": "pin_hash",
+        "name": "email",
         "type_info": "Varchar"
       },
       {
         "ordinal": 4,
+        "name": "pin_hash",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
         "name": "deleted_at",
         "type_info": "Timestamp"
       }
@@ -35,6 +40,7 @@
       ]
     },
     "nullable": [
+      false,
       false,
       false,
       false,

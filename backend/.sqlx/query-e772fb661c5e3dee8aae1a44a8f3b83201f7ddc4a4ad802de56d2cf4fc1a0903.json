@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM products WHERE id = $1",
+  "query": "\n        SELECT id, name, product_type as \"product_type: ProductType\"\n        FROM products\n            ",
   "describe": {
     "columns": [
       {
@@ -15,14 +15,14 @@
       },
       {
         "ordinal": 2,
-        "name": "product_type",
+        "name": "product_type: ProductType",
         "type_info": {
           "Custom": {
             "name": "product_type",
             "kind": {
               "Enum": [
-                "ColdDrink",
-                "HotDrink"
+                "colddrink",
+                "hotdrink"
               ]
             }
           }
@@ -30,9 +30,7 @@
       }
     ],
     "parameters": {
-      "Left": [
-        "Int8"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
@@ -40,5 +38,5 @@
       false
     ]
   },
-  "hash": "33de585f492d980dd6fc2420352233a03fdc6ed226fdb338a31601f906805454"
+  "hash": "e772fb661c5e3dee8aae1a44a8f3b83201f7ddc4a4ad802de56d2cf4fc1a0903"
 }
