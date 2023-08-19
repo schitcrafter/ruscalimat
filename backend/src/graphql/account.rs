@@ -31,9 +31,11 @@ impl AccountQuery {
     }
 
     // TODO: Return Account here
-    async fn my_account(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+    async fn my_account(&self, ctx: &Context<'_>) -> async_graphql::Result<UserClaims> {
         let user_claims: Option<&UserClaims> = ctx.data_opt();
-        Ok(format!("{user_claims:?}"))
+        user_claims
+            .cloned()
+            .ok_or(color_eyre::eyre::eyre!("Not logged in").extend_with(|_, e| e.set("code", 400)))
     }
 
     async fn pin_login(&self, _pin: u16) -> String {

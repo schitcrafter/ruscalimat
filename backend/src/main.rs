@@ -1,7 +1,7 @@
 use std::env;
 
 use color_eyre::eyre::Result;
-use poem::{get, listener::TcpListener, post, EndpointExt, Route, Server};
+use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
 use poem_openapi::OpenApiService;
 use sqlx::postgres::PgPoolOptions;
 use tracing::info;
@@ -53,6 +53,7 @@ async fn main() -> Result<()> {
     let api_routes = Route::new()
         .nest("/rest", api_service)
         .at("/graphql", post(graphql::graphql_handler))
+        .with(Cors::new())
         .around(auth::auth_middleware);
 
     let app = Route::new()

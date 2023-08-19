@@ -1,12 +1,13 @@
 use std::sync::OnceLock;
 
+use async_graphql::SimpleObject;
 use jsonwebtoken::{jwk::JwkSet, DecodingKey, TokenData, Validation};
 use poem::{
     error::{BadRequest, InternalServerError, Unauthorized},
     http::StatusCode,
     Endpoint, Request, Result,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tracing::debug;
 
 pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
@@ -42,7 +43,7 @@ pub async fn get_jwk_set(jwks_url: &str) -> color_eyre::Result<JwkSet> {
         .map_err(From::from)
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, SimpleObject, Deserialize, Clone)]
 pub struct UserClaims {
     #[serde(default)]
     pub groups: Vec<String>,
@@ -51,7 +52,12 @@ pub struct UserClaims {
 /// If an auth header was sent, this validates it and
 /// adds user info as data to the request. If
 pub async fn auth_middleware<E: Endpoint>(next: E, mut req: Request) -> Result<E::Output> {
-    if let Some(auth_token) = req.header("Authorization") {
+    if let Some(auth_token) = req
+        .header("Authorization")
+        // Treat an empty auth header as no auth header
+        .map(|h| if h.is_empty() { None } else { Some(h) })
+        .flatten()
+    {
         let auth_token = auth_token
             .strip_prefix("Bearer ")
             .ok_or(poem::Error::from_string(
