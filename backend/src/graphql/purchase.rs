@@ -19,7 +19,15 @@ impl PurchaseQuery {
         todo!()
     }
 
-    async fn purchase(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<Purchase> {
+    async fn purchase(
+        &self,
+        ctx: &Context<'_>,
+        product_id: PrimaryKey,
+        amount: u32,
+    ) -> Result<Purchase> {
+        if amount == 0 {
+            return Err(async_graphql::Error::new("amount cannot be 0"));
+        }
         let db = ctx.data()?;
         sqlx::query_as!(Purchase, "SELECT * FROM purchases WHERE id = $1", id)
             .fetch_one(db)

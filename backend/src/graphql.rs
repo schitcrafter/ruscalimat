@@ -13,6 +13,7 @@ mod account;
 mod product;
 mod purchase;
 mod statistics;
+mod types;
 
 #[derive(MergedObject, Default)]
 pub struct QueryRoot(

@@ -30,8 +30,18 @@
       },
       {
         "ordinal": 5,
+        "name": "picture",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
         "name": "deleted_at",
         "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 7,
+        "name": "balance",
+        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -48,7 +58,9 @@
       false,
       false,
       false,
-      true
+      true,
+      true,
+      false
     ]
   },
   "hash": "301428ab34a133644c3e16b835f96a3bb46e0a3e052b143b85244fbe40bbf8cd"

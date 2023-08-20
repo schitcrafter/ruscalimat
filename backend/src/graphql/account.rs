@@ -1,21 +1,40 @@
-use async_graphql::{Context, ErrorExtensions, Object};
+use async_graphql::{Context, ErrorExtensions, Object, SimpleObject};
 
 use crate::{
     auth::UserClaims,
     db::{Account, PrimaryKey},
 };
 
+use super::types::sort::Sort;
+
+#[derive(SimpleObject)]
+struct AccountsList {
+    data: Vec<Account>,
+    page: u32,
+    total: u32,
+}
+
 #[derive(Default)]
 pub struct AccountQuery;
 
 #[Object]
 impl AccountQuery {
-    async fn accounts(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Account>> {
+    /// TODO: Implement `sort` parameter
+    /// TODO: Implement paging
+    async fn accounts(&self, ctx: &Context<'_>, sort: Sort) -> async_graphql::Result<AccountsList> {
         let db = ctx.data_unchecked();
         let accounts = sqlx::query_as!(Account, "SELECT * FROM accounts")
             .fetch_all(db)
             .await?;
-        Ok(accounts)
+
+        let total = accounts.len() as u32;
+
+        let accounts_list = AccountsList {
+            data: accounts,
+            page: 1,
+            total,
+        };
+        Ok(accounts_list)
     }
 
     async fn account(

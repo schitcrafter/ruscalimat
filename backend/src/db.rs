@@ -11,12 +11,16 @@ pub type PrimaryKey = i64;
 #[graphql(input_name = "AccountInput")]
 pub struct Account {
     pub id: PrimaryKey,
-    pub external_id: String,
     pub name: String,
     pub email: String,
+    #[graphql(name = "extId")]
+    pub external_id: String,
+    pub picture: Option<String>,
     pub deleted_at: Option<NaiveDateTime>,
     // #[graphql(secret)]
-    pub pin_hash: String,
+    pub pin_hash: Option<String>,
+    pub balance: i64,
+    pub has_pin: bool,
 }
 
 #[derive(SimpleObject, InputObject, FromRow)]
@@ -59,6 +63,7 @@ pub struct Purchase {
     pub id: PrimaryKey,
     pub account_id: PrimaryKey,
     pub product_id: PrimaryKey,
+    pub paid_price: i64,
     pub quantity: i32,
     pub refunded: bool,
 }
