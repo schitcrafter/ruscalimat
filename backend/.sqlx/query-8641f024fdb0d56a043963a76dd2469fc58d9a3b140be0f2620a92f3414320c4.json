@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM favorites\n            WHERE account_id = $1 AND product_id = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8641f024fdb0d56a043963a76dd2469fc58d9a3b140be0f2620a92f3414320c4"
+}

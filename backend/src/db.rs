@@ -30,10 +30,14 @@ pub struct Product {
     pub price: i64,
 }
 
-#[derive(SimpleObject)]
+#[derive(SimpleObject, sqlx::FromRow)]
 pub struct ProductWithFavorite {
+    #[graphql(default = -1)]
     pub id: PrimaryKey,
-    pub product: Product,
+    pub name: String,
+    pub product_type: ProductType,
+    pub price: i64,
+    #[sqlx(default)]
     pub is_favorite: bool,
 }
 
