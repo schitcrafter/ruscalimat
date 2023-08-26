@@ -12,7 +12,7 @@ impl ProductQuery {
         sqlx::query_as!(
             Product,
             r#"
-        SELECT id, name, product_type as "product_type: ProductType"
+        SELECT id, name, price, product_type as "product_type: ProductType"
         FROM products
             "#
         )
@@ -30,7 +30,7 @@ impl ProductQuery {
         sqlx::query_as!(
             Product,
             r#"
-        SELECT id, name, product_type as "product_type: ProductType"
+        SELECT id, name, price, product_type as "product_type: ProductType"
         FROM products
         WHERE id = $1
             "#,
@@ -57,12 +57,13 @@ impl ProductMutation {
         sqlx::query_as!(
             Product,
             r#"
-        INSERT INTO products ( name, product_type )
-        VALUES ( $1, $2 )
-        RETURNING id, name, product_type AS "product_type!: ProductType"
+        INSERT INTO products ( name, product_type, price )
+        VALUES ( $1, $2, $3 )
+        RETURNING id, name, price, product_type AS "product_type!: ProductType"
             "#,
             product.name,
-            product.product_type as ProductType
+            product.product_type as ProductType,
+            product.price
         )
         .fetch_one(db)
         .await
@@ -75,13 +76,14 @@ impl ProductMutation {
             Product,
             r#"
             UPDATE products
-            SET name = $2, product_type = $3
+            SET name = $2, product_type = $3, price = $4
             WHERE id = $1
-            RETURNING id, name, product_type AS "product_type!: ProductType"
+            RETURNING id, name, price, product_type AS "product_type!: ProductType"
             "#,
             product.id,
             product.name,
-            product.product_type as ProductType
+            product.product_type as ProductType,
+            product.price
         )
         .fetch_one(db)
         .await

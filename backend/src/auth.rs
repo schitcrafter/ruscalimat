@@ -8,7 +8,17 @@ use poem::{
     Endpoint, Request, Result,
 };
 use serde::{Deserialize, Serialize};
-use tracing::debug;
+use tracing::{debug, trace};
+
+#[derive(Debug, Serialize, SimpleObject, Deserialize, Clone)]
+pub struct UserClaims {
+    #[serde(rename = "sub")]
+    pub user_id: String,
+    pub name: String,
+    pub email: String,
+    #[serde(default)]
+    pub groups: Vec<String>,
+}
 
 pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     let openid_configuration: serde_json::Value = reqwest::get(format!(
@@ -18,7 +28,7 @@ pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     .json()
     .await?;
 
-    debug!(
+    trace!(
         "Got response from openid_configuration endpoint: {}",
         openid_configuration
     );
@@ -43,20 +53,13 @@ pub async fn get_jwk_set(jwks_url: &str) -> color_eyre::Result<JwkSet> {
         .map_err(From::from)
 }
 
-#[derive(Debug, Serialize, SimpleObject, Deserialize, Clone)]
-pub struct UserClaims {
-    #[serde(default)]
-    pub groups: Vec<String>,
-}
-
 /// If an auth header was sent, this validates it and
-/// adds user info as data to the request. If
+/// adds user info as data to the request.
 pub async fn auth_middleware<E: Endpoint>(next: E, mut req: Request) -> Result<E::Output> {
     if let Some(auth_token) = req
         .header("Authorization")
         // Treat an empty auth header as no auth header
-        .map(|h| if h.is_empty() { None } else { Some(h) })
-        .flatten()
+        .and_then(|h| if h.is_empty() { None } else { Some(h) })
     {
         let auth_token = auth_token
             .strip_prefix("Bearer ")
@@ -89,10 +92,11 @@ pub async fn auth_middleware<E: Endpoint>(next: E, mut req: Request) -> Result<E
             .ok_or(poem::Error::from_status(StatusCode::INTERNAL_SERVER_ERROR))?;
         let validation = Validation::new(algorithm);
 
+        debug!("Trying to verify JWT");
         let verified_header: TokenData<UserClaims> =
             jsonwebtoken::decode(auth_token, &decoding_key, &validation).map_err(Unauthorized)?;
 
-        debug!("Adding claims to data: {:?}", verified_header.claims);
+        debug!("Auth successful with claims {:?}", verified_header.claims);
         req.extensions_mut().insert(verified_header.claims);
     }
     next.call(req).await

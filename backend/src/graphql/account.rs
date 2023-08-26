@@ -1,11 +1,10 @@
 use async_graphql::{Context, ErrorExtensions, Object, SimpleObject};
 
 use crate::{
-    auth::UserClaims,
-    db::{Account, PrimaryKey},
+    db::{Account},
 };
 
-use super::types::sort::Sort;
+use super::{extract_user_claims, types::sort::Sort};
 
 #[derive(SimpleObject)]
 struct AccountsList {
@@ -21,7 +20,7 @@ pub struct AccountQuery;
 impl AccountQuery {
     /// TODO: Implement `sort` parameter
     /// TODO: Implement paging
-    async fn accounts(&self, ctx: &Context<'_>, sort: Sort) -> async_graphql::Result<AccountsList> {
+    async fn accounts(&self, ctx: &Context<'_>, _sort: Sort) -> async_graphql::Result<AccountsList> {
         let db = ctx.data_unchecked();
         let accounts = sqlx::query_as!(Account, "SELECT * FROM accounts")
             .fetch_all(db)
@@ -40,7 +39,7 @@ impl AccountQuery {
     async fn account(
         &self,
         ctx: &Context<'_>,
-        id: PrimaryKey,
+        id: String,
     ) -> async_graphql::Result<Option<Account>> {
         let db = ctx.data_unchecked();
         let account = sqlx::query_as!(Account, "SELECT * FROM accounts WHERE id = $1", id)
@@ -49,12 +48,18 @@ impl AccountQuery {
         Ok(account)
     }
 
-    // TODO: Return Account here
-    async fn my_account(&self, ctx: &Context<'_>) -> async_graphql::Result<UserClaims> {
-        let user_claims: Option<&UserClaims> = ctx.data_opt();
-        user_claims
-            .cloned()
-            .ok_or(color_eyre::eyre::eyre!("Not logged in").extend_with(|_, e| e.set("code", 400)))
+    async fn my_account(&self, ctx: &Context<'_>) -> async_graphql::Result<Account> {
+        let user_claims = extract_user_claims(ctx)?;
+        let db = ctx.data()?;
+
+        let account = sqlx::query_as!(
+            Account,
+            "SELECT * FROM accounts WHERE id = $1",
+            user_claims.user_id
+        )
+        .fetch_one(db)
+        .await?;
+        Ok(account)
     }
 
     async fn pin_login(&self, _pin: u16) -> String {
@@ -78,11 +83,7 @@ pub struct AccountMutation;
 
 #[Object]
 impl AccountMutation {
-    async fn delete_account(
-        &self,
-        ctx: &Context<'_>,
-        id: PrimaryKey,
-    ) -> async_graphql::Result<bool> {
+    async fn delete_account(&self, ctx: &Context<'_>, id: String) -> async_graphql::Result<bool> {
         let db = ctx.data()?;
         sqlx::query!("UPDATE accounts SET deleted_at = now() WHERE id = $1", id)
             .execute(db)
@@ -91,24 +92,19 @@ impl AccountMutation {
     }
 
     async fn signup(&self, ctx: &Context<'_>, pin: u16) -> async_graphql::Result<Account> {
-        if pin > 9999 {
-            return Err(
-                color_eyre::eyre::eyre!("Pin needs to be between 0 and 9999")
-                    .extend_with(|_, e| e.set("code", 400)),
-            );
-        }
+        let user_claims = extract_user_claims(ctx)?;
         let db = ctx.data()?;
         let pin_hash = hash_pin(pin)?;
         let account = sqlx::query_as!(
             Account,
             r#"
-                INSERT INTO accounts (name, external_id, email, pin_hash)
+                INSERT INTO accounts (name, id, email, pin_hash)
                 VALUES ($1, $2, $3, $4)
                 RETURNING *
             "#,
-            "test_name",                       // TODO:
-            "some-external-id-from-sub-claim", // TODO:
-            "test_email@test.com",             // TODO:
+            user_claims.name,
+            user_claims.user_id,
+            user_claims.email,
             pin_hash
         )
         .fetch_one(db)
@@ -124,9 +120,13 @@ impl AccountMutation {
     ) -> async_graphql::Result<bool> {
         let db = ctx.data()?;
         sqlx::query!(
-            "UPDATE accounts SET name = $1, email = $2 WHERE id = $3",
+            r#"
+            UPDATE accounts
+            SET name = $1, email = $2, picture = $3
+            WHERE id = $4"#,
             account.name,
             account.email,
+            account.picture,
             account.id
         )
         .execute(db)
@@ -134,12 +134,29 @@ impl AccountMutation {
         Ok(true)
     }
 
-    async fn set_pin(&self, _pin: u16) -> bool {
-        todo!()
+    async fn set_pin(&self, ctx: &Context<'_>, pin: u16) -> async_graphql::Result<bool> {
+        let user_claims = extract_user_claims(ctx)?;
+        let db = ctx.data()?;
+        let pin_hash = hash_pin(pin)?;
+
+        sqlx::query!(
+            "UPDATE accounts SET pin_hash = $1 WHERE id = $2",
+            pin_hash,
+            user_claims.user_id
+        )
+        .execute(db)
+        .await?;
+
+        Ok(true)
     }
 }
 
 fn hash_pin(pin: u16) -> async_graphql::Result<String> {
+    if pin > 9999 {
+        return Err(async_graphql::Error::new(
+            "Pin needs to be between 0 and 9999",
+        ));
+    }
     bcrypt::hash(pin.to_string(), bcrypt::DEFAULT_COST)
         .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
 }

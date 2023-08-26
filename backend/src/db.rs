@@ -10,17 +10,14 @@ pub type PrimaryKey = i64;
 #[derive(SimpleObject, InputObject)]
 #[graphql(input_name = "AccountInput")]
 pub struct Account {
-    pub id: PrimaryKey,
+    pub id: String,
     pub name: String,
     pub email: String,
-    #[graphql(name = "extId")]
-    pub external_id: String,
     pub picture: Option<String>,
     pub deleted_at: Option<NaiveDateTime>,
-    // #[graphql(secret)]
+    #[graphql(secret)]
     pub pin_hash: Option<String>,
     pub balance: i64,
-    pub has_pin: bool,
 }
 
 #[derive(SimpleObject, InputObject, FromRow)]
@@ -30,6 +27,7 @@ pub struct Product {
     pub id: PrimaryKey,
     pub name: String,
     pub product_type: ProductType,
+    pub price: i64,
 }
 
 #[derive(SimpleObject)]
@@ -61,7 +59,7 @@ impl From<i16> for ProductType {
 #[graphql(input_name = "PurchaseInput")]
 pub struct Purchase {
     pub id: PrimaryKey,
-    pub account_id: PrimaryKey,
+    pub account_id: String,
     pub product_id: PrimaryKey,
     pub paid_price: i64,
     pub quantity: i32,

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM purchases",
+  "query": "\n            INSERT INTO purchases\n            (account_id, product_id, quantity, paid_price)\n            VALUES ($1, $2, $3, $4)\n            RETURNING *",
   "describe": {
     "columns": [
       {
@@ -35,7 +35,12 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Varchar",
+        "Int8",
+        "Int4",
+        "Int8"
+      ]
     },
     "nullable": [
       false,
@@ -46,5 +51,5 @@
       false
     ]
   },
-  "hash": "8573e5163b096c0c773aa3f1035b012b5ae4b4e83e96b57a9714a762d8ccc5f8"
+  "hash": "3b37559f325f1e274e61cbd665935e4c71f24c24bae555c2bc665945e034e979"
 }

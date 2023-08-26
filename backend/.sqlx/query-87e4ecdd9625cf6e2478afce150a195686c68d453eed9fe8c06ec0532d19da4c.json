@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM accounts WHERE deleted_at IS NOT NULL",
+  "query": "\n                INSERT INTO accounts (name, id, email, pin_hash)\n                VALUES ($1, $2, $3, $4)\n                RETURNING *\n            ",
   "describe": {
     "columns": [
       {
@@ -40,7 +40,12 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
     },
     "nullable": [
       false,
@@ -52,5 +57,5 @@
       false
     ]
   },
-  "hash": "1c885ab64920901df4c9b562b329932e247db544610d2faa31daabbc2b87e5d0"
+  "hash": "87e4ecdd9625cf6e2478afce150a195686c68d453eed9fe8c06ec0532d19da4c"
 }

@@ -1,4 +1,6 @@
-use async_graphql::{http::GraphiQLSource, EmptySubscription, MergedObject, Schema};
+use async_graphql::{
+    http::GraphiQLSource, Context, EmptySubscription, ErrorExtensions, MergedObject, Schema,
+};
 use async_graphql_poem::{GraphQLBatchRequest, GraphQLBatchResponse};
 use poem::{
     handler,
@@ -58,4 +60,11 @@ pub async fn graphiql_handler() -> impl IntoResponse {
             .endpoint("/ruscalimat/v1/graphql")
             .finish(),
     )
+}
+
+pub fn extract_user_claims<'ctx>(
+    ctx: &'ctx Context<'ctx>,
+) -> async_graphql::Result<&'ctx UserClaims> {
+    ctx.data()
+        .map_err(|err| err.extend_with(|_, e| e.set("code", 401)))
 }

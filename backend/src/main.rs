@@ -1,12 +1,12 @@
 use std::env;
 
+use crate::rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi};
 use color_eyre::eyre::Result;
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
 use poem_openapi::OpenApiService;
 use sqlx::postgres::PgPoolOptions;
 use tracing::info;
-
-use crate::rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi};
+use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, EnvFilter};
 
 mod auth;
 mod db;
@@ -17,7 +17,14 @@ mod rest;
 async fn main() -> Result<()> {
     color_eyre::install()?;
     dotenvy::dotenv()?;
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .init();
 
     auth::setup(&env::var("AUTH_SERVER_URL").unwrap()).await?;
 
@@ -54,7 +61,8 @@ async fn main() -> Result<()> {
         .nest("/rest", api_service)
         .at("/graphql", post(graphql::graphql_handler))
         .with(Cors::new())
-        .around(auth::auth_middleware);
+        .around(auth::auth_middleware)
+        .with(poem::middleware::Tracing);
 
     let app = Route::new()
         .nest(
