@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, name, price, product_type as \"product_type: ProductType\",\n            (\n                SELECT 1 FROM favorites WHERE account_id=$1 AND product_id=products.id\n            ) IS NOT NULL as \"is_favorite!\"\n            FROM products\n            WHERE $2::product_type IS NULL OR product_type = $2\n            ORDER BY\n            \"is_favorite!\" DESC,\n            name ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "price",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "product_type: ProductType",
+        "type_info": {
+          "Custom": {
+            "name": "product_type",
+            "kind": {
+              "Enum": [
+                "colddrink",
+                "hotdrink"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "is_favorite!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        {
+          "Custom": {
+            "name": "product_type",
+            "kind": {
+              "Enum": [
+                "colddrink",
+                "hotdrink"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "87b4a6d2340488677779abb259cb678bd1f3f78220b091f3e20442b7bd00fab8"
+}

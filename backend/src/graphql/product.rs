@@ -40,6 +40,9 @@ impl ProductQuery {
             ) IS NOT NULL as "is_favorite!"
             FROM products
             WHERE $2::product_type IS NULL OR product_type = $2
+            ORDER BY
+            "is_favorite!" DESC,
+            name ASC
             "#,
             user_claims.user_id,
             product_type as Option<ProductType>
