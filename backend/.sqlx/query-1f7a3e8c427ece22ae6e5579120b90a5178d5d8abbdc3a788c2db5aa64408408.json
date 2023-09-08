@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE purchases\n            SET refunded = true\n            WHERE id = $1 AND refunded = false\n            RETURNING paid_price",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "paid_price",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1f7a3e8c427ece22ae6e5579120b90a5178d5d8abbdc3a788c2db5aa64408408"
+}

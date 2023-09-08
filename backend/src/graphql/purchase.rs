@@ -99,11 +99,35 @@ impl PurchaseMutation {
     }
 
     async fn refund_purchase(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<bool> {
+        let user_claims = extract_user_claims(ctx)?;
         let db = ctx.data()?;
-        sqlx::query!("UPDATE purchases SET refunded = true WHERE id = $1", id)
-            .execute(db)
-            .await
-            .map(|result| result.rows_affected() == 1)
-            .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
+
+        let purchase = sqlx::query!(
+            r#"
+            UPDATE purchases
+            SET refunded = true
+            WHERE id = $1 AND refunded = false
+            RETURNING paid_price"#,
+            id
+        )
+        .fetch_one(db)
+        .await
+        .map_err(|_err| {
+            async_graphql::Error::new("No not-yet refunded purchase with this id found")
+        })?;
+
+        sqlx::query!(
+            r#"
+            UPDATE accounts
+            SET balance = balance + $1
+            WHERE id = $2
+            "#,
+            purchase.paid_price,
+            user_claims.user_id
+        )
+        .execute(db)
+        .await?;
+
+        Ok(true)
     }
 }

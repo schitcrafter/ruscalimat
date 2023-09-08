@@ -23,6 +23,22 @@ impl ProductQuery {
         .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
     }
 
+    async fn product(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<Product> {
+        let db = ctx.data()?;
+        sqlx::query_as!(
+            Product,
+            r#"
+        SELECT id, name, price, product_type as "product_type: ProductType"
+        FROM products
+        WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_one(db)
+        .await
+        .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
+    }
+
     async fn products_with_favorites(
         &self,
         ctx: &Context<'_>,
@@ -53,24 +69,31 @@ impl ProductQuery {
         Ok(products)
     }
 
-    async fn product(&self, ctx: &Context<'_>, id: PrimaryKey) -> Result<Product> {
+    async fn product_with_favorite(
+        &self,
+        ctx: &Context<'_>,
+        id: PrimaryKey,
+    ) -> Result<ProductWithFavorite> {
+        let user_claims = extract_user_claims(ctx)?;
         let db = ctx.data()?;
-        sqlx::query_as!(
-            Product,
+
+        let product = sqlx::query_as!(
+            ProductWithFavorite,
             r#"
-        SELECT id, name, price, product_type as "product_type: ProductType"
-        FROM products
-        WHERE id = $1
+            SELECT id, name, price, product_type as "product_type: ProductType",
+            (
+                SELECT 1 FROM favorites WHERE account_id=$1 AND product_id=products.id
+            ) IS NOT NULL as "is_favorite!"
+            FROM products
+            WHERE id=$2
             "#,
+            user_claims.user_id,
             id
         )
         .fetch_one(db)
-        .await
-        .map_err(|err| err.extend_with(|_, e| e.set("code", 500)))
-    }
+        .await?;
 
-    async fn product_with_favorite(&self, _id: u64) -> ProductWithFavorite {
-        todo!()
+        Ok(product)
     }
 }
 

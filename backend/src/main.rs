@@ -1,6 +1,6 @@
 use std::env;
 
-use crate::rest::pictureapi::{AccountPicApi, PictureApi, ProductPicApi};
+use crate::rest::pictureapi::{AccountPicApi, ProductPicApi};
 use color_eyre::eyre::Result;
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
 use poem_openapi::OpenApiService;
@@ -26,7 +26,8 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    auth::setup(&env::var("AUTH_SERVER_URL").unwrap()).await?;
+    let auth_server_url = env::var("AUTH_SERVER_URL").unwrap();
+    auth::setup(&auth_server_url).await?;
 
     let port = env::var("APPLICATION_PORT").unwrap_or("3000".to_owned());
     let hosted_url = format!("localhost:{port}");
@@ -34,8 +35,9 @@ async fn main() -> Result<()> {
 
     info!("OpenAPI explorer running at {hosted_http}/q/docs");
     info!("GraphiQL running at {hosted_http}/q/graphiql");
+    info!("Login endpoint at {auth_server_url}/account/#/");
 
-    let all_endpoints = (PictureApi, AccountPicApi, ProductPicApi);
+    let all_endpoints = (AccountPicApi, ProductPicApi);
 
     let api_service = OpenApiService::new(all_endpoints, "Ruscalimat API", "1.0")
         .server(format!("{hosted_http}/v1/rest"));

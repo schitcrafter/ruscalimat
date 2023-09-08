@@ -84,7 +84,6 @@ pub async fn auth_middleware<E: Endpoint>(next: E, mut req: Request) -> Result<E
                 StatusCode::BAD_REQUEST,
             ))?;
 
-        // FIXME: Store `DecodingKey`, not `JwkSet`
         let decoding_key = DecodingKey::from_jwk(jwk).map_err(InternalServerError)?;
         let algorithm = jwk
             .common

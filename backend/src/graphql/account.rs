@@ -1,8 +1,6 @@
 use async_graphql::{Context, ErrorExtensions, Object, SimpleObject};
 
-use crate::{
-    db::{Account},
-};
+use crate::db::Account;
 
 use super::{extract_user_claims, types::sort::Sort};
 
@@ -20,11 +18,18 @@ pub struct AccountQuery;
 impl AccountQuery {
     /// TODO: Implement `sort` parameter
     /// TODO: Implement paging
-    async fn accounts(&self, ctx: &Context<'_>, _sort: Sort) -> async_graphql::Result<AccountsList> {
+    async fn accounts(
+        &self,
+        ctx: &Context<'_>,
+        _sort: Sort,
+    ) -> async_graphql::Result<AccountsList> {
         let db = ctx.data_unchecked();
-        let accounts = sqlx::query_as!(Account, "SELECT * FROM accounts")
-            .fetch_all(db)
-            .await?;
+        let accounts = sqlx::query_as!(
+            Account,
+            "SELECT * FROM accounts WHERE deleted_at IS NOT NULL"
+        )
+        .fetch_all(db)
+        .await?;
 
         let total = accounts.len() as u32;
 
