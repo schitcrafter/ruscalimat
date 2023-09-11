@@ -24,12 +24,9 @@ impl AccountQuery {
         _sort: Sort,
     ) -> async_graphql::Result<AccountsList> {
         let db = ctx.data_unchecked();
-        let accounts = sqlx::query_as!(
-            Account,
-            "SELECT * FROM accounts WHERE deleted_at IS NOT NULL"
-        )
-        .fetch_all(db)
-        .await?;
+        let accounts = sqlx::query_as!(Account, "SELECT * FROM accounts WHERE deleted_at IS NULL")
+            .fetch_all(db)
+            .await?;
 
         let total = accounts.len() as u32;
 

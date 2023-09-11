@@ -1,7 +1,7 @@
-use std::sync::OnceLock;
+use std::{env, sync::OnceLock};
 
-use async_graphql::SimpleObject;
 use jsonwebtoken::{jwk::JwkSet, DecodingKey, TokenData, Validation};
+use once_cell::sync::Lazy;
 use poem::{
     error::{BadRequest, InternalServerError, Unauthorized},
     http::StatusCode,
@@ -10,7 +10,7 @@ use poem::{
 use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
 
-#[derive(Debug, Serialize, SimpleObject, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserClaims {
     #[serde(rename = "sub")]
     pub user_id: String,
@@ -19,6 +19,17 @@ pub struct UserClaims {
     #[serde(default)]
     pub groups: Vec<String>,
 }
+
+impl UserClaims {
+    pub fn is_admin(&self) -> bool {
+        self.groups
+            .iter()
+            .any(|group| group == ADMIN_GROUP.as_str())
+    }
+}
+
+static JWK_SET: OnceLock<JwkSet> = OnceLock::new();
+static ADMIN_GROUP: Lazy<String> = Lazy::new(|| env::var("AUTH_ADMIN_GROUP").unwrap());
 
 pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     let openid_configuration: serde_json::Value = reqwest::get(format!(
@@ -42,8 +53,6 @@ pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     debug!("Got jwk set");
     Ok(())
 }
-
-static JWK_SET: OnceLock<JwkSet> = OnceLock::new();
 
 pub async fn get_jwk_set(jwks_url: &str) -> color_eyre::Result<JwkSet> {
     reqwest::get(jwks_url)

@@ -3,7 +3,7 @@ use std::env;
 use crate::rest::pictureapi::{AccountPicApi, ProductPicApi};
 use color_eyre::eyre::Result;
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
-use poem_openapi::OpenApiService;
+use poem_openapi::{ExtraHeader, OpenApiService};
 use sqlx::postgres::PgPoolOptions;
 use tracing::info;
 use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, EnvFilter};
@@ -12,6 +12,7 @@ mod auth;
 mod db;
 mod graphql;
 mod rest;
+mod s3;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -28,6 +29,7 @@ async fn main() -> Result<()> {
 
     let auth_server_url = env::var("AUTH_SERVER_URL").unwrap();
     auth::setup(&auth_server_url).await?;
+    s3::init().await;
 
     let port = env::var("APPLICATION_PORT").unwrap_or("3000".to_owned());
     let hosted_url = format!("localhost:{port}");
