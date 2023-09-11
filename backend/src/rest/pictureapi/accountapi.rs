@@ -8,8 +8,9 @@ use sqlx::{Pool, Postgres};
 use tracing::info;
 use uuid::Uuid;
 
+use crate::auth::JwtBearerAuth;
 use crate::rest::pictureapi::VALID_EXTENSIONS;
-use crate::{auth::UserClaims, s3};
+use crate::s3;
 
 use super::FileUpload;
 
@@ -22,7 +23,7 @@ impl AccountPicApi {
         &self,
         Path(user_id): Path<String>,
         Data(db): Data<&Pool<Postgres>>,
-        user_claims: Data<&UserClaims>,
+        JwtBearerAuth(user_claims): JwtBearerAuth,
         file_upload: FileUpload,
     ) -> poem::Result<PlainText<String>> {
         if !user_claims.is_admin() {
@@ -38,14 +39,12 @@ impl AccountPicApi {
 
         let extension = std::path::Path::new(file_upload.filename.as_str()).extension();
 
-        let extension =
-            extension
-                .map(|ext| ext.to_str())
-                .flatten()
-                .ok_or(poem::Error::from_string(
-                    "Filename needs to have extension",
-                    StatusCode::BAD_REQUEST,
-                ))?;
+        let extension = extension
+            .and_then(|ext| ext.to_str())
+            .ok_or(poem::Error::from_string(
+                "Filename needs to have extension",
+                StatusCode::BAD_REQUEST,
+            ))?;
 
         if !VALID_EXTENSIONS.contains(&extension) {
             return Err(poem::Error::from_string(

@@ -1,14 +1,60 @@
 use std::{env, sync::OnceLock};
 
-use jsonwebtoken::{jwk::JwkSet, DecodingKey, TokenData, Validation};
+use jsonwebtoken::{jwk::JwkSet, DecodingKey, Validation};
 use once_cell::sync::Lazy;
 use poem::{
     error::{BadRequest, InternalServerError, Unauthorized},
     http::StatusCode,
-    Endpoint, Request, Result,
+    Request, Result,
 };
+use poem_openapi::{auth::Bearer, SecurityScheme};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
+
+#[derive(SecurityScheme)]
+#[oai(ty = "bearer", bearer_format = "jwt", checker = "check_bearer")]
+pub struct JwtBearerAuth(pub UserClaims);
+
+pub async fn check_bearer(_req: &Request, bearer: Bearer) -> Result<UserClaims> {
+    let auth_token = bearer
+        .token
+        .strip_prefix("Bearer ")
+        .ok_or(poem::Error::from_string(
+            "Invalid auth header",
+            StatusCode::BAD_REQUEST,
+        ))?;
+
+    let unverified_header = jsonwebtoken::decode_header(auth_token).map_err(BadRequest)?;
+
+    let kid = unverified_header.kid.ok_or(poem::Error::from_string(
+        "JWT needs kid (key id) claim!",
+        StatusCode::BAD_REQUEST,
+    ))?;
+
+    let jwk = JWK_SET
+        .get()
+        .unwrap()
+        .find(&kid)
+        .ok_or(poem::Error::from_string(
+            format!("Could not find key id {}", kid),
+            StatusCode::BAD_REQUEST,
+        ))?;
+
+    let decoding_key = DecodingKey::from_jwk(jwk).map_err(InternalServerError)?;
+    let algorithm = jwk
+        .common
+        .algorithm
+        .ok_or(poem::Error::from_status(StatusCode::INTERNAL_SERVER_ERROR))?;
+    let validation = Validation::new(algorithm);
+
+    debug!("Trying to verify JWT");
+    let verified_header =
+        jsonwebtoken::decode(auth_token, &decoding_key, &validation).map_err(Unauthorized)?;
+
+    debug!("Auth successful with claims {:?}", verified_header.claims);
+
+    Ok(verified_header.claims)
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserClaims {
@@ -54,58 +100,10 @@ pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     Ok(())
 }
 
-pub async fn get_jwk_set(jwks_url: &str) -> color_eyre::Result<JwkSet> {
+async fn get_jwk_set(jwks_url: &str) -> color_eyre::Result<JwkSet> {
     reqwest::get(jwks_url)
         .await?
         .json()
         .await
         .map_err(From::from)
-}
-
-/// If an auth header was sent, this validates it and
-/// adds user info as data to the request.
-pub async fn auth_middleware<E: Endpoint>(next: E, mut req: Request) -> Result<E::Output> {
-    if let Some(auth_token) = req
-        .header("Authorization")
-        // Treat an empty auth header as no auth header
-        .and_then(|h| if h.is_empty() { None } else { Some(h) })
-    {
-        let auth_token = auth_token
-            .strip_prefix("Bearer ")
-            .ok_or(poem::Error::from_string(
-                "Invalid auth header",
-                StatusCode::BAD_REQUEST,
-            ))?;
-
-        let unverified_header = jsonwebtoken::decode_header(auth_token).map_err(BadRequest)?;
-
-        let kid = unverified_header.kid.ok_or(poem::Error::from_string(
-            "JWT needs kid (key id) claim!",
-            StatusCode::BAD_REQUEST,
-        ))?;
-
-        let jwk = JWK_SET
-            .get()
-            .unwrap()
-            .find(&kid)
-            .ok_or(poem::Error::from_string(
-                format!("Could not find key id {}", kid),
-                StatusCode::BAD_REQUEST,
-            ))?;
-
-        let decoding_key = DecodingKey::from_jwk(jwk).map_err(InternalServerError)?;
-        let algorithm = jwk
-            .common
-            .algorithm
-            .ok_or(poem::Error::from_status(StatusCode::INTERNAL_SERVER_ERROR))?;
-        let validation = Validation::new(algorithm);
-
-        debug!("Trying to verify JWT");
-        let verified_header: TokenData<UserClaims> =
-            jsonwebtoken::decode(auth_token, &decoding_key, &validation).map_err(Unauthorized)?;
-
-        debug!("Auth successful with claims {:?}", verified_header.claims);
-        req.extensions_mut().insert(verified_header.claims);
-    }
-    next.call(req).await
 }

@@ -3,7 +3,7 @@ use std::env;
 use crate::rest::pictureapi::{AccountPicApi, ProductPicApi};
 use color_eyre::eyre::Result;
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
-use poem_openapi::{ExtraHeader, OpenApiService};
+use poem_openapi::OpenApiService;
 use sqlx::postgres::PgPoolOptions;
 use tracing::info;
 use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, EnvFilter};
@@ -65,7 +65,6 @@ async fn main() -> Result<()> {
         .nest("/rest", api_service)
         .at("/graphql", post(graphql::graphql_handler))
         .with(Cors::new())
-        .around(auth::auth_middleware)
         .with(poem::middleware::Tracing);
 
     let app = Route::new()
