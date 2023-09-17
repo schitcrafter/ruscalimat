@@ -3,11 +3,9 @@ use poem::web::Data;
 use poem::Result;
 use poem::{error::InternalServerError, http::StatusCode};
 use poem_openapi::param::Path;
-use poem_openapi::payload::PlainText;
 use poem_openapi::OpenApi;
 use sqlx::{Pool, Postgres};
 use tracing::info;
-use uuid::Uuid;
 
 use crate::auth::JwtBearerAuth;
 use crate::s3::{self, full_account_picture_key, partial_picture_key};
@@ -90,7 +88,7 @@ async fn delete_account_picture(db: &Pool<Postgres>, user_id: &str) -> Result<()
 
     s3::delete_file(full_key.as_str())
         .await
-        .map_err(InternalServerError);
+        .map_err(InternalServerError)?;
 
     Ok(())
 }
@@ -105,7 +103,7 @@ async fn upload_account_picture(
     let body = file_upload.file.into_vec().await.map_err(BadRequest)?;
 
     let filename = file_upload.filename.as_str();
-    let part_key = partial_picture_key(filename, &user_id)?;
+    let part_key = partial_picture_key(filename, user_id)?;
     let full_key = full_account_picture_key(part_key.as_str());
 
     s3::upload_file(full_key.as_str(), body.into())
