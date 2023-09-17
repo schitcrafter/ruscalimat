@@ -33,12 +33,6 @@ impl AccountPicApi {
         upload_account_picture(db, &user_id, file_upload).await
     }
 
-    #[oai(path = "/account/:id", method = "delete")]
-    pub async fn delete_other_account_picture(&self, Path(id): Path<String>) {
-        info!("Deleting account picture with id {id}");
-        todo!()
-    }
-
     #[oai(path = "/myAccount", method = "post")]
     pub async fn update_my_account_picture(
         &self,
@@ -51,9 +45,54 @@ impl AccountPicApi {
     }
 
     #[oai(path = "/myAccount", method = "delete")]
-    pub async fn remove_my_account_picture(&self) {
-        todo!()
+    pub async fn delete_my_account_picture(
+        &self,
+        Data(db): Data<&Pool<Postgres>>,
+        JwtBearerAuth(user_claims): JwtBearerAuth,
+    ) -> Result<()> {
+        delete_account_picture(db, &user_claims.user_id).await
     }
+
+    #[oai(path = "/account/:id", method = "delete")]
+    pub async fn delete_other_account_picture(
+        &self,
+        Path(id): Path<String>,
+        Data(db): Data<&Pool<Postgres>>,
+        JwtBearerAuth(user_claims): JwtBearerAuth,
+    ) -> Result<()> {
+        if !user_claims.is_admin() {
+            return Err(poem::Error::from_status(StatusCode::FORBIDDEN));
+        }
+
+        delete_account_picture(db, &id).await
+    }
+}
+
+async fn delete_account_picture(db: &Pool<Postgres>, user_id: &str) -> Result<()> {
+    info!("Deleting account picture from user {user_id}");
+
+    let account = sqlx::query!(
+        r#"
+        SELECT picture FROM accounts WHERE id = $1
+    "#,
+        user_id
+    )
+    .fetch_one(db)
+    .await
+    .map_err(|_| poem::Error::from_string("Unknown id", StatusCode::BAD_REQUEST))?;
+
+    let picture = account.picture.ok_or(poem::Error::from_string(
+        "Account has no picture",
+        StatusCode::BAD_REQUEST,
+    ))?;
+
+    let full_key = full_account_picture_key(picture.as_str());
+
+    s3::delete_file(full_key.as_str())
+        .await
+        .map_err(InternalServerError);
+
+    Ok(())
 }
 
 async fn upload_account_picture(
@@ -90,7 +129,7 @@ async fn upload_account_picture(
 }
 
 async fn assert_account_exists(db: &Pool<Postgres>, id: &str) -> Result<()> {
-    sqlx::query!("SELECT * FROM accounts WHERE id = $1", id)
+    sqlx::query!("SELECT id FROM accounts WHERE id = $1", id)
         .fetch_one(db)
         .await
         .map_err(|_| poem::Error::from_string("Unknown id", StatusCode::BAD_REQUEST))?;

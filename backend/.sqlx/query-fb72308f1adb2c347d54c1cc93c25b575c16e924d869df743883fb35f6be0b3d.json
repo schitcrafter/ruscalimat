@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM products WHERE id = $1",
+  "query": "\n        SELECT id, name, price, picture, product_type as \"product_type: ProductType\"\n        FROM products\n            ",
   "describe": {
     "columns": [
       {
@@ -15,7 +15,17 @@
       },
       {
         "ordinal": 2,
-        "name": "product_type",
+        "name": "price",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "picture",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "product_type: ProductType",
         "type_info": {
           "Custom": {
             "name": "product_type",
@@ -27,24 +37,18 @@
             }
           }
         }
-      },
-      {
-        "ordinal": 3,
-        "name": "price",
-        "type_info": "Int8"
       }
     ],
     "parameters": {
-      "Left": [
-        "Int8"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
       false,
       false,
+      true,
       false
     ]
   },
-  "hash": "33de585f492d980dd6fc2420352233a03fdc6ed226fdb338a31601f906805454"
+  "hash": "fb72308f1adb2c347d54c1cc93c25b575c16e924d869df743883fb35f6be0b3d"
 }

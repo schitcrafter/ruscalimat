@@ -28,6 +28,7 @@ pub struct Product {
     pub name: String,
     pub product_type: ProductType,
     pub price: i64,
+    pub picture: Option<String>,
 }
 
 #[derive(SimpleObject, sqlx::FromRow)]
@@ -37,6 +38,7 @@ pub struct ProductWithFavorite {
     pub name: String,
     pub product_type: ProductType,
     pub price: i64,
+    pub picture: Option<String>,
     #[sqlx(default)]
     pub is_favorite: bool,
 }

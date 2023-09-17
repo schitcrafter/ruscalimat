@@ -14,7 +14,7 @@ impl ProductQuery {
         sqlx::query_as!(
             Product,
             r#"
-        SELECT id, name, price, product_type as "product_type: ProductType"
+        SELECT id, name, price, picture, product_type as "product_type: ProductType"
         FROM products
             "#
         )
@@ -28,7 +28,7 @@ impl ProductQuery {
         sqlx::query_as!(
             Product,
             r#"
-        SELECT id, name, price, product_type as "product_type: ProductType"
+        SELECT id, name, price, picture, product_type as "product_type: ProductType"
         FROM products
         WHERE id = $1
             "#,
@@ -50,7 +50,7 @@ impl ProductQuery {
         let products = sqlx::query_as!(
             ProductWithFavorite,
             r#"
-            SELECT id, name, price, product_type as "product_type: ProductType",
+            SELECT id, name, price, picture, product_type as "product_type: ProductType",
             (
                 SELECT 1 FROM favorites WHERE account_id=$1 AND product_id=products.id
             ) IS NOT NULL as "is_favorite!"
@@ -80,7 +80,7 @@ impl ProductQuery {
         let product = sqlx::query_as!(
             ProductWithFavorite,
             r#"
-            SELECT id, name, price, product_type as "product_type: ProductType",
+            SELECT id, name, price, picture, product_type as "product_type: ProductType",
             (
                 SELECT 1 FROM favorites WHERE account_id=$1 AND product_id=products.id
             ) IS NOT NULL as "is_favorite!"
@@ -110,7 +110,7 @@ impl ProductMutation {
             r#"
         INSERT INTO products ( name, product_type, price )
         VALUES ( $1, $2, $3 )
-        RETURNING id, name, price, product_type AS "product_type!: ProductType"
+        RETURNING id, name, price, picture, product_type AS "product_type!: ProductType"
             "#,
             product.name,
             product.product_type as ProductType,
@@ -129,7 +129,7 @@ impl ProductMutation {
             UPDATE products
             SET name = $2, product_type = $3, price = $4
             WHERE id = $1
-            RETURNING id, name, price, product_type AS "product_type!: ProductType"
+            RETURNING id, name, price, picture, product_type AS "product_type!: ProductType"
             "#,
             product.id,
             product.name,

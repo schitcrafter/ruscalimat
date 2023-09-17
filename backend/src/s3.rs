@@ -13,6 +13,10 @@ use uuid::Uuid;
 
 use crate::config::SETTINGS;
 
+static ACCESS_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.access_key").unwrap());
+static SECRET_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.secret_key").unwrap());
+static BUCKET_NAME: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.bucketname").unwrap());
+
 static S3_CLIENT: OnceLock<Client> = OnceLock::new();
 
 pub async fn init() {
@@ -32,11 +36,8 @@ pub async fn init() {
 
     S3_CLIENT.set(client).unwrap();
 
-    create_bucket(SETTINGS.get_string("s3.bucketname").unwrap()).await;
+    create_bucket(BUCKET_NAME.as_str()).await;
 }
-
-static ACCESS_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.access_key").unwrap());
-static SECRET_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.secret_key").unwrap());
 
 async fn credentials_provider() -> aws_credential_types::provider::Result {
     Ok(Credentials::from_keys(
@@ -52,9 +53,24 @@ pub async fn upload_file(key: &str, body: ByteStream) -> Result<(), aws_sdk_s3::
         .get()
         .unwrap()
         .put_object()
-        .bucket(SETTINGS.get_string("s3.bucketname").unwrap())
+        .bucket(BUCKET_NAME.as_str())
         .key(key)
         .body(body)
+        .send()
+        .await?;
+
+    Ok(())
+}
+
+/// key here has to be a full key, not a part key
+pub async fn delete_file(key: &str) -> Result<(), aws_sdk_s3::Error> {
+    info!("Deleting file {key}");
+    S3_CLIENT
+        .get()
+        .unwrap()
+        .delete_object()
+        .bucket(BUCKET_NAME.as_str())
+        .key(key)
         .send()
         .await?;
 
