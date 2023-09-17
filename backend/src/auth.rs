@@ -1,4 +1,4 @@
-use std::{env, sync::OnceLock};
+use std::sync::OnceLock;
 
 use jsonwebtoken::{jwk::JwkSet, DecodingKey, Validation};
 use once_cell::sync::Lazy;
@@ -11,20 +11,17 @@ use poem_openapi::{auth::Bearer, SecurityScheme};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
 
+use crate::config::SETTINGS;
+
 #[derive(SecurityScheme)]
 #[oai(ty = "bearer", bearer_format = "jwt", checker = "check_bearer")]
 pub struct JwtBearerAuth(pub UserClaims);
 
 pub async fn check_bearer(_req: &Request, bearer: Bearer) -> Result<UserClaims> {
-    let auth_token = bearer
-        .token
-        .strip_prefix("Bearer ")
-        .ok_or(poem::Error::from_string(
-            "Invalid auth header",
-            StatusCode::BAD_REQUEST,
-        ))?;
+    debug!("Checking bearer {}", bearer.token);
 
-    let unverified_header = jsonwebtoken::decode_header(auth_token).map_err(BadRequest)?;
+    let unverified_header =
+        jsonwebtoken::decode_header(bearer.token.as_str()).map_err(BadRequest)?;
 
     let kid = unverified_header.kid.ok_or(poem::Error::from_string(
         "JWT needs kid (key id) claim!",
@@ -48,8 +45,8 @@ pub async fn check_bearer(_req: &Request, bearer: Bearer) -> Result<UserClaims> 
     let validation = Validation::new(algorithm);
 
     debug!("Trying to verify JWT");
-    let verified_header =
-        jsonwebtoken::decode(auth_token, &decoding_key, &validation).map_err(Unauthorized)?;
+    let verified_header = jsonwebtoken::decode(bearer.token.as_str(), &decoding_key, &validation)
+        .map_err(Unauthorized)?;
 
     debug!("Auth successful with claims {:?}", verified_header.claims);
 
@@ -66,6 +63,8 @@ pub struct UserClaims {
     pub groups: Vec<String>,
 }
 
+static ADMIN_GROUP: Lazy<String> = Lazy::new(|| SETTINGS.get_string("auth.admin_group").unwrap());
+
 impl UserClaims {
     pub fn is_admin(&self) -> bool {
         self.groups
@@ -75,7 +74,6 @@ impl UserClaims {
 }
 
 static JWK_SET: OnceLock<JwkSet> = OnceLock::new();
-static ADMIN_GROUP: Lazy<String> = Lazy::new(|| env::var("AUTH_ADMIN_GROUP").unwrap());
 
 pub async fn setup(auth_server_url: &str) -> color_eyre::Result<()> {
     let openid_configuration: serde_json::Value = reqwest::get(format!(

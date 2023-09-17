@@ -1,6 +1,7 @@
-use std::env;
-
-use crate::rest::pictureapi::{AccountPicApi, ProductPicApi};
+use crate::{
+    config::SETTINGS,
+    rest::pictureapi::{AccountPicApi, ProductPicApi},
+};
 use color_eyre::eyre::Result;
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
 use poem_openapi::OpenApiService;
@@ -9,6 +10,7 @@ use tracing::info;
 use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, EnvFilter};
 
 mod auth;
+mod config;
 mod db;
 mod graphql;
 mod rest;
@@ -27,11 +29,12 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    let auth_server_url = env::var("AUTH_SERVER_URL").unwrap();
+    let auth_server_url = SETTINGS.get_string("auth.provider_url")?;
     auth::setup(&auth_server_url).await?;
+
     s3::init().await;
 
-    let port = env::var("APPLICATION_PORT").unwrap_or("3000".to_owned());
+    let port = SETTINGS.get_int("ruscalimat.port")?;
     let hosted_url = format!("localhost:{port}");
     let hosted_http = format!("http://{hosted_url}/ruscalimat");
 
@@ -48,11 +51,12 @@ async fn main() -> Result<()> {
     let openapi_spec = api_service.spec_endpoint();
     let openapi_spec_yaml = api_service.spec_endpoint_yaml();
 
-    let db_url = env::var("DATABASE_URL").unwrap();
+    let db_url = SETTINGS.get_string("db.url")?;
     let db_pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(db_url.as_str())
         .await?;
+
     sqlx::migrate!().run(&db_pool).await?;
 
     let dev_paths = Route::new()

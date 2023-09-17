@@ -11,5 +11,3 @@ pub struct FileUpload {
     file: Upload,
     filename: String,
 }
-
-const VALID_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png"];
