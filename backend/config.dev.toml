@@ -5,7 +5,6 @@ region = "us-east-1"
 access_key = "ROOTNAME"
 secret_key = "CHANGEME123"
 
-
 [auth]
 admin_group = "admin"
 provider_url = "http://dockerlaptop:8180/realms/ruscalimat"

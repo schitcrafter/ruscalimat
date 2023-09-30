@@ -1,7 +1,7 @@
 port = 8080
 
 [s3]
-url = "http://minio:9000/"
+url = "http://localhost:9000/"
 bucketname = "ruscalimat"
 region = "us-east-1"
 access_key = "minioadmin"
@@ -9,6 +9,10 @@ secret_key = "minioadmin"
 
 [auth]
 admin_group = "admin"
+provider_url = "http://localhost:8180/realms/ruscalimat"
+
+[auth.pinlogin]
+keypath = "./private_key.pem"
 
 [db]
-url = "postgres://postgres:postgres@ruscalimat-db:5432/ruscalimat"
+url = "postgres://postgres:postgres@localhost:5432/ruscalimat"
