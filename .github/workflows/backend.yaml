@@ -66,5 +66,5 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            ghcr.io/schitcrafter/ruscalimat-backend:dev-latest
-            ghcr.io/schitcrafter/ruscalimat-backend:dev-${{ github.run_number }}
+            ghcr.io/schitcrafter/ruscalimat/backend:dev-latest
+            ghcr.io/schitcrafter/ruscalimat/backend:dev-${{ github.run_number }}
