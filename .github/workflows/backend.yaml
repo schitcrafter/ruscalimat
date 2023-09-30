@@ -8,16 +8,18 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
+  SQLX_OFFLINE: "true"
+
+defaults:
+  run:
+    working-directory: backend
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      SCCACHE_GHA_ENABLED: "true"
-      RUSTC_WRAPPER: "sccache"
-      SQLX_OFFLINE: "true"
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.3
@@ -73,5 +75,4 @@ jobs:
           push: true
           tags: |
             ghcr.io/schitcrafter/ruscalimat-backend:dev-latest
-            ghcr.io/schitcrafter/ruscalimat-backend:dev-${{ github.event.repository.updated_at}}
             ghcr.io/schitcrafter/ruscalimat-backend:dev-${{ github.run_number }}
