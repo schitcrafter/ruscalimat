@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - backend/**
+      - .github/workflows/backend.yaml
     branches:
       - main
   workflow_dispatch:
@@ -61,7 +62,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v3
         with:
-          context: backend/
+          context: ./backend
           file: backend/Dockerfile
           push: true
           tags: |
