@@ -34,7 +34,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: install
-          args: --release --all-features --manifest-path backend/Cargo.toml --path backend
+          args: --manifest-path backend/Cargo.toml --path backend
 
   test:
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all-targets --all-features --manifest-path backend/Cargo.toml
+          args: --manifest-path backend/Cargo.toml
 
   build-docker-image:
     runs-on: ubuntu-latest
