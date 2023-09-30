@@ -19,7 +19,7 @@ mod s3;
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
-    dotenvy::dotenv()?;
+    let _ = dotenvy::dotenv();
     tracing_subscriber::registry()
         .with(fmt::layer())
         .with(
