@@ -13,8 +13,8 @@ use uuid::Uuid;
 
 use crate::config::SETTINGS;
 
-static ACCESS_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.access_key").unwrap());
-static SECRET_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.secret_key").unwrap());
+static ACCESS_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.accesskey").unwrap());
+static SECRET_KEY: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.secretkey").unwrap());
 static BUCKET_NAME: Lazy<String> = Lazy::new(|| SETTINGS.get_string("s3.bucketname").unwrap());
 
 static S3_CLIENT: OnceLock<Client> = OnceLock::new();
