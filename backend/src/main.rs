@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    let auth_server_url = SETTINGS.get_string("auth.provider_url")?;
+    let auth_server_url = SETTINGS.get_string("auth.provider.url")?;
     auth::setup(&auth_server_url).await?;
 
     s3::init().await;

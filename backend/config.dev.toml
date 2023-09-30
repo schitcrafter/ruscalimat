@@ -7,7 +7,7 @@ secret_key = "CHANGEME123"
 
 [auth]
 admin_group = "admin"
-provider_url = "http://dockerlaptop:8180/realms/ruscalimat"
+provider.url = "http://dockerlaptop:8180/realms/ruscalimat"
 
 [auth.pinlogin]
 keypath = "./private_key.pem"

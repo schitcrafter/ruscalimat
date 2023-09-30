@@ -5,15 +5,12 @@ pub static SETTINGS: Lazy<Config> = Lazy::new(setup);
 
 fn setup() -> Config {
     let builder = Config::builder().add_source(config::File::with_name("config"));
-
+    let builder = builder.add_source(config::Environment::with_prefix("APP").separator("_"));
     #[cfg(debug_assertions)]
     let builder = builder.add_source(config::File::with_name("config.dev").required(false));
 
     #[cfg(not(debug_assertions))]
-    let builder = builder.add_source(config::File::with_name("config.prod").required(false));
+    let builder = builder.add_source(config::File::with_name("config.prod"));
 
-    builder
-        .add_source(config::Environment::with_prefix("APP").separator("_"))
-        .build()
-        .unwrap()
+    builder.build().unwrap()
 }
