@@ -3,7 +3,7 @@ CREATE TABLE accounts (
     id VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    pin_hash VARCHAR(255),
+    pin_hash VARCHAR(255) NOT NULL,
     picture VARCHAR(255),
     deleted_at TIMESTAMP,
     balance BIGINT NOT NULL DEFAULT 0
@@ -15,7 +15,8 @@ CREATE TABLE products (
     id BIGINT UNIQUE GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     product_type product_type NOT NULL,
-    price BIGINT NOT NULL
+    price BIGINT NOT NULL,
+    picture VARCHAR(255) DEFAULT NULL
 );
 
 CREATE TABLE purchases (

@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
 
     s3::init().await;
 
-    let port = SETTINGS.get_int("ruscalimat.port")?;
+    let port = SETTINGS.get_int("port")?;
     let hosted_url = format!("localhost:{port}");
     let hosted_http = format!("http://{hosted_url}/ruscalimat");
 

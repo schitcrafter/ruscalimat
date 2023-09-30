@@ -16,7 +16,7 @@ pub struct Account {
     pub picture: Option<String>,
     pub deleted_at: Option<NaiveDateTime>,
     #[graphql(secret)]
-    pub pin_hash: Option<String>,
+    pub pin_hash: String,
     pub balance: i64,
 }
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM accounts WHERE id = $1",
+  "query": "\n            SELECT * FROM accounts WHERE id = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -48,11 +48,11 @@
       false,
       false,
       false,
-      false,
+      true,
       true,
       true,
       false
     ]
   },
-  "hash": "d767aed5aed104bf81708f43b22dcd9afc62c1eb79daa79852f84f9d7cc24ba6"
+  "hash": "ac64050a512ccb063a89308ff06e71ed8ecfe5de55c1dde17dbd8e610c0d4d6c"
 }

@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use jsonwebtoken::{jwk::JwkSet, DecodingKey, Validation};
+use jsonwebtoken::{jwk::JwkSet, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 use poem::{
     error::{BadRequest, InternalServerError, Unauthorized},
@@ -104,4 +104,31 @@ async fn get_jwk_set(jwks_url: &str) -> color_eyre::Result<JwkSet> {
         .json()
         .await
         .map_err(From::from)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PinUserClaims {
+    #[serde(rename = "sub")]
+    pub user_id: String,
+}
+
+static PIN_JWT_KEY: Lazy<EncodingKey> = Lazy::new(get_jwt_encoding_key);
+
+fn get_jwt_encoding_key() -> EncodingKey {
+    let key_path = SETTINGS.get_string("auth.pinlogin.keypath").unwrap();
+    let key = std::fs::read(key_path.clone())
+        .expect(format!("You need to put a private pem key at {key_path}").as_str());
+    EncodingKey::from_ec_pem(&key).expect("Not a valid private ec pem key")
+}
+
+pub fn create_pin_jwt(user_id: &str) -> jsonwebtoken::errors::Result<String> {
+    let header = Header::new(jsonwebtoken::Algorithm::ES384);
+
+    let claims = PinUserClaims {
+        user_id: user_id.to_owned(),
+    };
+
+    let jwt = jsonwebtoken::encode(&header, &claims, &*PIN_JWT_KEY)?;
+
+    Ok(format!("Pin {jwt}"))
 }

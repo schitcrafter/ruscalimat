@@ -1,6 +1,6 @@
-use async_graphql::{Context, ErrorExtensions, Object, SimpleObject};
+use async_graphql::{Context, ErrorExtensions, InputObject, Object, SimpleObject};
 
-use crate::db::Account;
+use crate::{auth, db::Account};
 
 use super::{extract_user_claims, types::sort::Sort};
 
@@ -64,12 +64,36 @@ impl AccountQuery {
         Ok(account)
     }
 
-    async fn pin_login(&self, _pin: u16) -> String {
-        todo!()
+    /// Returns a JWT, which can be used to authenticate later requests
+    async fn pin_login(
+        &self,
+        ctx: &Context<'_>,
+        pin_login: PinLogin,
+    ) -> async_graphql::Result<String> {
+        let db = ctx.data()?;
+        let user = sqlx::query_as!(
+            Account,
+            r#"
+            SELECT * FROM accounts WHERE id = $1
+            "#,
+            pin_login.id
+        )
+        .fetch_one(db)
+        .await?;
+
+        if !bcrypt::verify(pin_login.pin.to_string(), user.pin_hash.as_str())? {
+            return Err(
+                async_graphql::Error::new("Wrong pin").extend_with(|_, e| e.set("code", 401))
+            );
+        }
+
+        let jwt = auth::create_pin_jwt(user.id.as_str())?;
+
+        Ok(jwt)
     }
 
     async fn deleted_accounts(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Account>> {
-        let db = ctx.data_unchecked();
+        let db = ctx.data()?;
         let accounts = sqlx::query_as!(
             Account,
             "SELECT * FROM accounts WHERE deleted_at IS NOT NULL"
@@ -78,6 +102,12 @@ impl AccountQuery {
         .await?;
         Ok(accounts)
     }
+}
+
+#[derive(InputObject)]
+struct PinLogin {
+    pub id: String,
+    pub pin: u16,
 }
 
 #[derive(Default)]
