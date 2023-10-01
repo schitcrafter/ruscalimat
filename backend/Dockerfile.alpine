@@ -1,0 +1,18 @@
+# needs the builder to have executed
+# `cargo build` with the x86_64-unknown-linux-gnu
+# beforehand
+
+FROM alpine:3
+RUN apk update && apk add ca-certificates && apk cache clean
+
+WORKDIR /usr/local/ruscalimat
+COPY target/x86_64-unknown-linux-musl/release/ruscalimat-backend /usr/local/bin/ruscalimat
+COPY config.toml config.toml
+COPY config.prod.toml config.prod.toml
+
+# remove me if this actually gets deployed
+COPY private_key.pem private_key.pem
+COPY public_key.pem public_key.pem
+
+EXPOSE 8080
+CMD ["ruscalimat"]

@@ -1,8 +1,9 @@
 pub mod sort {
     use async_graphql::{Enum, InputObject};
 
-    #[derive(InputObject)]
+    #[derive(InputObject, Default)]
     pub struct Sort {
+        #[graphql(default)]
         pub columns: Vec<Column>,
     }
 

@@ -21,9 +21,9 @@ impl AccountQuery {
     async fn accounts(
         &self,
         ctx: &Context<'_>,
-        _sort: Sort,
+        #[graphql(default)] _sort: Sort,
     ) -> async_graphql::Result<AccountsList> {
-        let db = ctx.data_unchecked();
+        let db = ctx.data()?;
         let accounts = sqlx::query_as!(Account, "SELECT * FROM accounts WHERE deleted_at IS NULL")
             .fetch_all(db)
             .await?;
