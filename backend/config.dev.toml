@@ -2,8 +2,8 @@
 url = "http://dockerlaptop:9000/"
 bucketname = "ruscalimat"
 region = "us-east-1"
-access_key = "ROOTNAME"
-secret_key = "CHANGEME123"
+accesskey = "ROOTNAME"
+secretkey = "CHANGEME123"
 
 [auth]
 admin_group = "admin"
