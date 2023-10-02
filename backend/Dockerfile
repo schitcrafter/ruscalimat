@@ -10,9 +10,5 @@ COPY target/release/ruscalimat-backend /usr/local/bin/ruscalimat
 COPY config.toml config.toml
 COPY config.prod.toml config.prod.toml
 
-# remove me if this actually gets deployed
-COPY private_key.pem private_key.pem
-COPY public_key.pem public_key.pem
-
 EXPOSE 8080
 CMD ["ruscalimat"]
