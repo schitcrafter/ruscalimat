@@ -118,11 +118,15 @@ fn get_jwt_encoding_key() -> EncodingKey {
     let key_path = SETTINGS.get_string("auth.pinlogin.keypath").unwrap();
     let key = std::fs::read(key_path.clone())
         .expect(format!("You need to put a private pem key at {key_path}").as_str());
+    trace!(
+        "Read private key pem file: {}",
+        String::from_utf8(key.clone()).unwrap()
+    );
     EncodingKey::from_ec_pem(&key).expect("Not a valid private ec pem key")
 }
 
 pub fn create_pin_jwt(user_id: &str) -> jsonwebtoken::errors::Result<String> {
-    let header = Header::new(jsonwebtoken::Algorithm::ES384);
+    let header = Header::new(jsonwebtoken::Algorithm::ES256);
 
     let claims = PinUserClaims {
         user_id: user_id.to_owned(),

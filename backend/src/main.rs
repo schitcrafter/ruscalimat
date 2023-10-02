@@ -35,7 +35,9 @@ async fn main() -> Result<()> {
     s3::init().await;
 
     let port = SETTINGS.get_int("port")?;
-    let hosted_url = format!("0.0.0.0:{port}");
+    let ip = SETTINGS.get_string("ip")?;
+
+    let hosted_url = format!("{ip}:{port}");
     let hosted_http = format!("http://{hosted_url}/ruscalimat");
 
     info!("OpenAPI explorer running at {hosted_http}/q/docs");
