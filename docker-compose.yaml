@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres
 
   keycloak:
-    image: quay.io/keycloak/keycloak:22.0.1
+    image: quay.io/keycloak/keycloak:20.0
     user: '0'
     ports:
       - 8180:8080
@@ -35,14 +35,14 @@ services:
     command: server /data --console-address ":9001"
 
   backend:
-    image: ghcr.io/schitcrafter/ruscalimat/backend:dev-47-alpine
+    image: ghcr.io/schitcrafter/ruscalimat/backend:dev-48-alpine
     profiles:
       - backend
     environment:
       - APP_S3_ACCESSKEY=ROOTNAME
       - APP_S3_SECRETKEY=CHANGEME123
     volumes:
-      - ./backend/private_key.pem:/usr/local/bin/private_key.pem
+      - ./backend/private_key.pem:/usr/local/ruscalimat/private_key.pem
     ports:
       - '8080:8080'
 
