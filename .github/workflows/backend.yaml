@@ -84,7 +84,7 @@ jobs:
           override: true
 
       - name: Install musl build tools
-        run: sudo apt install musl-tools -y
+        run: sudo apt update && sudo apt install musl-tools -y
 
       - name: Cargo build
         uses: actions-rs/cargo@v1
