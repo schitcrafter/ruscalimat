@@ -1,12 +1,16 @@
-# needs the builder to have executed
-# `cargo build` with the x86_64-unknown-linux-gnu
-# beforehand
+FROM rust:1.73-alpine as builder
+RUN apk add musl-dev perl make
+# openssl openssl-dev libssl3
+WORKDIR /app
+COPY . .
+RUN SQLX_OFFLINE=true cargo build --release
 
 FROM alpine:3
 RUN apk update && apk add ca-certificates && apk cache clean
 
+COPY --from=builder /app/target/release/ruscalimat-backend /usr/local/bin/ruscalimat
+
 WORKDIR /usr/local/ruscalimat
-COPY target/x86_64-unknown-linux-musl/release/ruscalimat-backend /usr/local/bin/ruscalimat
 COPY config.toml config.toml
 COPY config.prod.toml config.prod.toml
 

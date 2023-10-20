@@ -58,7 +58,7 @@ pub async fn graphql_handler(
         });
 
     let user_claims = if let Some(bearer) = bearer {
-        Some(check_bearer(rest_request, bearer).await?)
+        Some(check_bearer(bearer).await?)
     } else {
         None
     };

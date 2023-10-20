@@ -14,10 +14,14 @@ use tracing::{debug, trace};
 use crate::config::SETTINGS;
 
 #[derive(SecurityScheme)]
-#[oai(ty = "bearer", bearer_format = "jwt", checker = "check_bearer")]
+#[oai(ty = "bearer", bearer_format = "jwt", checker = "check_bearer_opt")]
 pub struct JwtBearerAuth(pub UserClaims);
 
-pub async fn check_bearer(_req: &Request, bearer: Bearer) -> Result<UserClaims> {
+async fn check_bearer_opt(_req: &Request, bearer: Bearer) -> Option<UserClaims> {
+    check_bearer(bearer).await.ok()
+}
+
+pub async fn check_bearer(bearer: Bearer) -> Result<UserClaims> {
     debug!("Checking bearer {}", bearer.token);
 
     let unverified_header =
