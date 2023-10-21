@@ -26,23 +26,10 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.3
 
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: rustfmt, clippy
-          override: true
 
-      - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --manifest-path backend/Cargo.toml
-
-      - name: Run Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --manifest-path backend/Cargo.toml
+      - run: cargo check
+      - run: cargo clippy
+      - run: cargo audit
 
   build:
     runs-on: ubuntu-latest
