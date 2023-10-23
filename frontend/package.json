@@ -57,7 +57,7 @@
 		"@urql/svelte": "^4.0.0",
 		"dayjs": "^1.11.8",
 		"dotenv": "^16.0.3",
-		"graphql": "^16.6.0",
+		"graphql": "^16.8.1",
 		"oidc-client-ts": "^2.2.4",
 		"svelte-i18n": "^3.6.0"
 	}
